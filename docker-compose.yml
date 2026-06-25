@@ -1,0 +1,196 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: radar_licitacoes
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d radar_licitacoes"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/radar_licitacoes
+      APP_TIMEZONE: ${APP_TIMEZONE:-America/Sao_Paulo}
+      RELAX_X509_STRICT: ${RELAX_X509_STRICT:-false}
+      JWT_SECRET: ${JWT_SECRET:-desenvolvimento-local-troque-em-producao}
+      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-168}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-Radar Licitações <onboarding@resend.dev>}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:3000}
+      BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-http://localhost:8000}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
+      PNCP_BASE_URL: https://pncp.gov.br/api/consulta
+      PNCP_MODALIDADES: 1,2,3,4,5,6,7,8,9,10,11,12,13
+      PNCP_MAX_PAGES: ${PNCP_MAX_PAGES:-100}
+      CORS_ORIGINS: http://localhost:${FRONTEND_PORT:-3000}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  pncp-worker:
+    build:
+      context: ./backend
+    command: ["python", "-m", "app.jobs.sincronizar_pncp", "live"]
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/radar_licitacoes
+      APP_TIMEZONE: ${APP_TIMEZONE:-America/Sao_Paulo}
+      RELAX_X509_STRICT: ${RELAX_X509_STRICT:-false}
+      PNCP_BASE_URL: https://pncp.gov.br/api/consulta
+      PNCP_MODALIDADES: 1,2,3,4,5,6,7,8,9,10,11,12,13
+      PNCP_MAX_PAGES: ${PNCP_MAX_PAGES:-100}
+      PNCP_SYNC_INTERVAL_SECONDS: ${PNCP_SYNC_INTERVAL_SECONDS:-300}
+      PNCP_REQUEST_DELAY_SECONDS: ${PNCP_REQUEST_DELAY_SECONDS:-1.5}
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  pncp-backfill:
+    build:
+      context: ./backend
+    command: ["python", "-m", "app.jobs.sincronizar_pncp", "backfill"]
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/radar_licitacoes
+      APP_TIMEZONE: ${APP_TIMEZONE:-America/Sao_Paulo}
+      RELAX_X509_STRICT: ${RELAX_X509_STRICT:-false}
+      PNCP_BASE_URL: https://pncp.gov.br/api/consulta
+      PNCP_MODALIDADES: 1,2,3,4,5,6,7,8,9,10,11,12,13
+      PNCP_MAX_PAGES: ${PNCP_MAX_PAGES:-100}
+      PNCP_INITIAL_BACKFILL_DAYS: ${PNCP_INITIAL_BACKFILL_DAYS:-30}
+      PNCP_BACKFILL_INTERVAL_SECONDS: ${PNCP_BACKFILL_INTERVAL_SECONDS:-300}
+      PNCP_BACKFILL_START_DELAY_SECONDS: ${PNCP_BACKFILL_START_DELAY_SECONDS:-120}
+      PNCP_REQUEST_DELAY_SECONDS: ${PNCP_BACKFILL_REQUEST_DELAY_SECONDS:-3}
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  pncp-open-worker:
+    build:
+      context: ./backend
+    command: ["python", "-m", "app.jobs.sincronizar_pncp", "open"]
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/radar_licitacoes
+      APP_TIMEZONE: ${APP_TIMEZONE:-America/Sao_Paulo}
+      RELAX_X509_STRICT: ${RELAX_X509_STRICT:-false}
+      PNCP_BASE_URL: https://pncp.gov.br/api/consulta
+      PNCP_MODALIDADES: 1,2,3,4,5,6,7,8,9,10,11,12,13
+      PNCP_OPEN_MAX_PAGES: ${PNCP_OPEN_MAX_PAGES:-500}
+      PNCP_OPEN_SYNC_INTERVAL_SECONDS: ${PNCP_OPEN_SYNC_INTERVAL_SECONDS:-21600}
+      PNCP_OPEN_START_DELAY_SECONDS: ${PNCP_OPEN_START_DELAY_SECONDS:-600}
+      PNCP_OPEN_HORIZON_DAYS: ${PNCP_OPEN_HORIZON_DAYS:-180}
+      PNCP_REQUEST_DELAY_SECONDS: ${PNCP_REQUEST_DELAY_SECONDS:-1.5}
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  compras-gov-worker:
+    build:
+      context: ./backend
+    command: ["python", "-m", "app.jobs.sincronizar_comprasgov", "live"]
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/radar_licitacoes
+      APP_TIMEZONE: ${APP_TIMEZONE:-America/Sao_Paulo}
+      RELAX_X509_STRICT: ${RELAX_X509_STRICT:-false}
+      COMPRAS_GOV_BASE_URL: https://dadosabertos.compras.gov.br
+      COMPRAS_GOV_MAX_PAGES: ${COMPRAS_GOV_MAX_PAGES:-100}
+      COMPRAS_GOV_SYNC_INTERVAL_SECONDS: ${COMPRAS_GOV_SYNC_INTERVAL_SECONDS:-900}
+      COMPRAS_GOV_SYNC_LOOKBACK_DAYS: ${COMPRAS_GOV_SYNC_LOOKBACK_DAYS:-7}
+      COMPRAS_GOV_REQUEST_DELAY_SECONDS: ${COMPRAS_GOV_REQUEST_DELAY_SECONDS:-0.5}
+      COMPRAS_GOV_UASG_ENRICHMENT_LIMIT: ${COMPRAS_GOV_UASG_ENRICHMENT_LIMIT:-50}
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  compras-gov-backfill:
+    build:
+      context: ./backend
+    command: ["python", "-m", "app.jobs.sincronizar_comprasgov", "backfill"]
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/radar_licitacoes
+      APP_TIMEZONE: ${APP_TIMEZONE:-America/Sao_Paulo}
+      RELAX_X509_STRICT: ${RELAX_X509_STRICT:-false}
+      COMPRAS_GOV_BASE_URL: https://dadosabertos.compras.gov.br
+      COMPRAS_GOV_MAX_PAGES: ${COMPRAS_GOV_MAX_PAGES:-100}
+      COMPRAS_GOV_SYNC_LOOKBACK_DAYS: ${COMPRAS_GOV_SYNC_LOOKBACK_DAYS:-7}
+      COMPRAS_GOV_INITIAL_BACKFILL_DAYS: ${COMPRAS_GOV_INITIAL_BACKFILL_DAYS:-730}
+      COMPRAS_GOV_BACKFILL_CHUNK_DAYS: ${COMPRAS_GOV_BACKFILL_CHUNK_DAYS:-90}
+      COMPRAS_GOV_BACKFILL_INTERVAL_SECONDS: ${COMPRAS_GOV_BACKFILL_INTERVAL_SECONDS:-300}
+      COMPRAS_GOV_BACKFILL_START_DELAY_SECONDS: ${COMPRAS_GOV_BACKFILL_START_DELAY_SECONDS:-300}
+      COMPRAS_GOV_REQUEST_DELAY_SECONDS: ${COMPRAS_GOV_REQUEST_DELAY_SECONDS:-0.5}
+      COMPRAS_GOV_UASG_ENRICHMENT_LIMIT: ${COMPRAS_GOV_UASG_ENRICHMENT_LIMIT:-50}
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  telegram-reminder-worker:
+    build:
+      context: ./backend
+    command: ["python", "-m", "app.jobs.enviar_lembretes"]
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/radar_licitacoes
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:3000}
+      RELAX_X509_STRICT: ${RELAX_X509_STRICT:-false}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  saved-search-alert-worker:
+    build:
+      context: ./backend
+    command: ["python", "-m", "app.jobs.enviar_alertas_buscas"]
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/radar_licitacoes
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:3000}
+      RELAX_X509_STRICT: ${RELAX_X509_STRICT:-false}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-Radar Licitações <onboarding@resend.dev>}
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:${BACKEND_PORT:-8000}
+      API_INTERNAL_URL: http://backend:8000
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:3000}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
