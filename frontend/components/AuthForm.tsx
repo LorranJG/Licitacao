@@ -16,6 +16,10 @@ export function AuthForm({ mode, oauthError = null }: AuthFormProps) {
   const [loading, setLoading] = useState(false);
   const isRegister = mode === "registrar";
 
+  function startGoogleLogin() {
+    window.location.assign("/api/session/google/start");
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
@@ -54,8 +58,9 @@ export function AuthForm({ mode, oauthError = null }: AuthFormProps) {
 
   return (
     <div className="mt-7">
-      <a
-        href="/api/session/google/start"
+      <button
+        type="button"
+        onClick={startGoogleLogin}
         className="focus-ring inline-flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-5 font-bold text-slate-700 transition hover:bg-slate-50"
       >
         <svg
@@ -81,7 +86,7 @@ export function AuthForm({ mode, oauthError = null }: AuthFormProps) {
           />
         </svg>
         Continuar com Google
-      </a>
+      </button>
       {oauthError ? (
         <p
           role="alert"
