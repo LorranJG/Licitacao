@@ -121,6 +121,41 @@ GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 ```
 
+### Login com Google em producao
+
+No Google Cloud Console, crie ou edite um cliente OAuth do tipo **Aplicativo da
+Web** e cadastre a URI de redirecionamento da Vercel:
+
+```text
+https://seu-frontend.vercel.app/api/session/google/callback
+```
+
+Se usar dominio proprio no frontend, cadastre tambem:
+
+```text
+https://seu-dominio.com/api/session/google/callback
+```
+
+Na Vercel, configure:
+
+```env
+APP_PUBLIC_URL=https://seu-frontend.vercel.app
+GOOGLE_CLIENT_ID=seu-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=seu-client-secret
+SESSION_COOKIE_SECURE=true
+```
+
+Na VPS, o backend precisa do mesmo `GOOGLE_CLIENT_ID` para validar o token:
+
+```bash
+cd /opt/licitacao
+nano .env.vps
+docker-compose --env-file .env.vps -f docker-compose.prod.yml restart backend
+```
+
+Depois de alterar variaveis na Vercel, faca um novo deploy para que o Next.js
+use os valores de producao.
+
 Os serviços `pncp-worker` e `pncp-backfill` mantêm a base sincronizada. Por
 padrão:
 
