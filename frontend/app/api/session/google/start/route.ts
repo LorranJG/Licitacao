@@ -10,7 +10,7 @@ function secureCookie(): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  const publicUrl = process.env.APP_PUBLIC_URL || request.nextUrl.origin;
+  const publicUrl = request.nextUrl.origin;
   const clientId = process.env.GOOGLE_CLIENT_ID;
   if (!clientId) {
     return NextResponse.redirect(

@@ -10,7 +10,7 @@ function errorRedirect(
   error: string,
   detail?: string | null,
 ) {
-  const publicUrl = process.env.APP_PUBLIC_URL || request.nextUrl.origin;
+  const publicUrl = request.nextUrl.origin;
   const redirectUrl = new URL("/login", publicUrl);
   redirectUrl.searchParams.set("erro", error);
   if (detail) {
@@ -23,7 +23,7 @@ function errorRedirect(
 }
 
 export async function GET(request: NextRequest) {
-  const publicUrl = process.env.APP_PUBLIC_URL || request.nextUrl.origin;
+  const publicUrl = request.nextUrl.origin;
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const code = request.nextUrl.searchParams.get("code");
