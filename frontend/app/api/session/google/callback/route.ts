@@ -5,11 +5,18 @@ import { backendUrl, SESSION_COOKIE } from "@/lib/session";
 const STATE_COOKIE = "google_oauth_state";
 const NONCE_COOKIE = "google_oauth_nonce";
 
-function errorRedirect(request: NextRequest, error: string) {
+function errorRedirect(
+  request: NextRequest,
+  error: string,
+  detail?: string | null,
+) {
   const publicUrl = process.env.APP_PUBLIC_URL || request.nextUrl.origin;
-  const response = NextResponse.redirect(
-    new URL(`/login?erro=${encodeURIComponent(error)}`, publicUrl),
-  );
+  const redirectUrl = new URL("/login", publicUrl);
+  redirectUrl.searchParams.set("erro", error);
+  if (detail) {
+    redirectUrl.searchParams.set("erro_detalhe", detail);
+  }
+  const response = NextResponse.redirect(redirectUrl);
   response.cookies.delete(STATE_COOKIE);
   response.cookies.delete(NONCE_COOKIE);
   return response;
@@ -59,7 +66,14 @@ export async function GET(request: NextRequest) {
     cache: "no-store",
   });
   if (!radarResponse.ok) {
-    return errorRedirect(request, "google_login_falhou");
+    let detail: string | null = null;
+    try {
+      const body = (await radarResponse.json()) as { detail?: string };
+      detail = typeof body.detail === "string" ? body.detail : null;
+    } catch {
+      detail = null;
+    }
+    return errorRedirect(request, "google_login_falhou", detail);
   }
   const body = (await radarResponse.json()) as {
     access_token: string;

@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/session";
 export const metadata = { title: "Entrar" };
 
 type LoginPageProps = {
-  searchParams: Promise<{ erro?: string }>;
+  searchParams: Promise<{ erro?: string; erro_detalhe?: string }>;
 };
 
 const googleErrors: Record<string, string> = {
@@ -24,7 +24,12 @@ const googleErrors: Record<string, string> = {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   if (await getCurrentUser()) redirect("/conta");
-  const { erro } = await searchParams;
+  const { erro, erro_detalhe } = await searchParams;
+  const oauthError = erro
+    ? erro === "google_login_falhou" && erro_detalhe
+      ? erro_detalhe
+      : googleErrors[erro] || "Falha no login com Google."
+    : null;
   return (
     <main className="container-page py-14 sm:py-20">
       <section className="mx-auto max-w-md rounded-3xl border border-slate-200 bg-white p-7 shadow-card sm:p-9">
@@ -39,7 +44,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </p>
         <AuthForm
           mode="login"
-          oauthError={erro ? googleErrors[erro] || "Falha no login com Google." : null}
+          oauthError={oauthError}
         />
       </section>
     </main>
