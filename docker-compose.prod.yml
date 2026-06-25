@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-radar_licitacoes}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-radar_licitacoes}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - ${ENV_FILE:-.env.vps}
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-radar_licitacoes}
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+
+  pncp-worker:
+    build:
+      context: ./backend
+    command: ["python", "-m", "app.jobs.sincronizar_pncp", "live"]
+    restart: unless-stopped
+    profiles: ["workers"]
+    env_file:
+      - ${ENV_FILE:-.env.vps}
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-radar_licitacoes}
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  compras-gov-worker:
+    build:
+      context: ./backend
+    command: ["python", "-m", "app.jobs.sincronizar_comprasgov", "live"]
+    restart: unless-stopped
+    profiles: ["workers"]
+    env_file:
+      - ${ENV_FILE:-.env.vps}
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-radar_licitacoes}
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

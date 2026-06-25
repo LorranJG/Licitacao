@@ -1,4 +1,6 @@
 .env
+.env.local
+.env.vps
 .venv/
 __pycache__/
 *.py[cod]
@@ -9,4 +11,3 @@ node_modules/
 out/
 coverage/
 .DS_Store
-

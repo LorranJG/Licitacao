@@ -44,6 +44,83 @@ legados de Dados Abertos do Compras.gov.br.
 
 O backend executa `alembic upgrade head` automaticamente ao iniciar no Docker.
 
+## Deploy: frontend na Vercel e API na VPS
+
+Use este fluxo para publicar o frontend na Vercel e manter backend e banco no
+servidor web.
+
+### VPS
+
+1. Instale Docker, Nginx e Certbot:
+
+   ```bash
+   apt update
+   apt install -y docker.io docker-compose-plugin nginx certbot python3-certbot-nginx
+   ```
+
+2. Clone o projeto e prepare as variaveis da VPS:
+
+   ```bash
+   git clone https://github.com/LorranJG/Licitacao.git
+   cd Licitacao
+   cp .env.vps.example .env.vps
+   nano .env.vps
+   ```
+
+   Preencha pelo menos `POSTGRES_PASSWORD`, `JWT_SECRET`, `APP_PUBLIC_URL`,
+   `BACKEND_PUBLIC_URL` e `CORS_ORIGINS`.
+
+3. Suba PostgreSQL e backend:
+
+   ```bash
+   docker compose --env-file .env.vps -f docker-compose.prod.yml up -d --build
+   curl http://127.0.0.1:8000/health
+   ```
+
+   Os workers de sincronizacao ficam opcionais para poupar memoria. Para ligar:
+
+   ```bash
+   docker compose --env-file .env.vps -f docker-compose.prod.yml --profile workers up -d --build
+   ```
+
+4. Configure o Nginx como proxy reverso:
+
+   ```bash
+   cp deploy/nginx/licitacao-api.conf /etc/nginx/sites-available/licitacao-api
+   nano /etc/nginx/sites-available/licitacao-api
+   ln -s /etc/nginx/sites-available/licitacao-api /etc/nginx/sites-enabled/licitacao-api
+   nginx -t
+   systemctl reload nginx
+   ```
+
+   Troque `api.seu-dominio.com` pelo dominio real antes de recarregar.
+
+5. Ative HTTPS:
+
+   ```bash
+   certbot --nginx -d api.seu-dominio.com
+   ```
+
+### Vercel
+
+Ao importar o repositorio, configure:
+
+- Root Directory: `frontend`
+- Framework Preset: Next.js
+- Install Command: `npm install`
+- Build Command: `npm run build`
+
+Variaveis de ambiente na Vercel:
+
+```env
+NEXT_PUBLIC_API_URL=https://api.seu-dominio.com
+API_INTERNAL_URL=https://api.seu-dominio.com
+APP_PUBLIC_URL=https://seu-frontend.vercel.app
+SESSION_COOKIE_SECURE=true
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+```
+
 Os serviços `pncp-worker` e `pncp-backfill` mantêm a base sincronizada. Por
 padrão:
 
