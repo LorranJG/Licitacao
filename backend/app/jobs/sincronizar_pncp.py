@@ -165,6 +165,16 @@ async def executar_abertas(service: PNCPService) -> None:
         tipo="abertas",
         dia=horizonte,
     )
+    with SessionLocal() as db:
+        registrar_status_fonte(
+            db,
+            "status_pncp",
+            status="ok" if completo else "parcial",
+            recebidas=recebidas,
+            criadas=criadas,
+            atualizadas=atualizadas,
+            mensagem=f"Varredura de abertas ate {horizonte.isoformat()}.",
+        )
     logger.info(
         "Varredura de abertas até %s: %s recebidas, %s criadas e %s "
         "atualizadas; completa=%s.",
