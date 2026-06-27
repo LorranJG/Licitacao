@@ -39,7 +39,20 @@ services:
       context: ./backend
     command: ["python", "-m", "app.jobs.sincronizar_pncp", "live"]
     restart: unless-stopped
-    profiles: ["workers"]
+    env_file:
+      - ${ENV_FILE:-.env.vps}
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-radar_licitacoes}
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  pncp-backfill-worker:
+    build:
+      context: ./backend
+    command: ["python", "-m", "app.jobs.sincronizar_pncp", "backfill"]
+    restart: unless-stopped
     env_file:
       - ${ENV_FILE:-.env.vps}
     environment:
@@ -54,13 +67,11 @@ services:
       context: ./backend
     command: ["python", "-m", "app.jobs.sincronizar_pncp", "open"]
     restart: unless-stopped
-    profiles: ["workers"]
     env_file:
       - ${ENV_FILE:-.env.vps}
     environment:
       ENVIRONMENT: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-radar_licitacoes}
-      PNCP_OPEN_START_DELAY_SECONDS: ${PNCP_OPEN_START_DELAY_SECONDS:-30}
     depends_on:
       backend:
         condition: service_healthy
@@ -70,7 +81,20 @@ services:
       context: ./backend
     command: ["python", "-m", "app.jobs.sincronizar_comprasgov", "live"]
     restart: unless-stopped
-    profiles: ["workers"]
+    env_file:
+      - ${ENV_FILE:-.env.vps}
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-radar_licitacoes}
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  compras-gov-backfill-worker:
+    build:
+      context: ./backend
+    command: ["python", "-m", "app.jobs.sincronizar_comprasgov", "backfill"]
+    restart: unless-stopped
     env_file:
       - ${ENV_FILE:-.env.vps}
     environment:

@@ -70,18 +70,19 @@ servidor web.
    Preencha pelo menos `POSTGRES_PASSWORD`, `JWT_SECRET`, `APP_PUBLIC_URL`,
    `BACKEND_PUBLIC_URL` e `CORS_ORIGINS`.
 
-3. Suba PostgreSQL e backend:
+3. Suba PostgreSQL, backend e workers de coleta:
 
    ```bash
    docker compose --env-file .env.vps -f docker-compose.prod.yml up -d --build
    curl http://127.0.0.1:8000/health
+   docker compose --env-file .env.vps -f docker-compose.prod.yml ps
    ```
 
-   Os workers de sincronizacao ficam opcionais para poupar memoria. Para ligar:
-
-   ```bash
-   docker compose --env-file .env.vps -f docker-compose.prod.yml --profile workers up -d --build
-   ```
+   Em producao, os workers sobem por padrao. Eles mantem a base atualizada e
+   recuperam dias perdidos gradualmente por backfill. Se a pagina mostrar
+   `sem_dados` para PNCP ou Compras.gov.br, confirme se os containers
+   `pncp-worker`, `pncp-open-worker`, `pncp-backfill-worker`,
+   `compras-gov-worker` e `compras-gov-backfill-worker` estao `Up`.
 
 4. Configure o Nginx como proxy reverso:
 
@@ -156,22 +157,24 @@ docker-compose --env-file .env.vps -f docker-compose.prod.yml restart backend
 Depois de alterar variaveis na Vercel, faca um novo deploy para que o Next.js
 use os valores de producao.
 
-Os serviços `pncp-worker` e `pncp-backfill` mantêm a base sincronizada. Por
-padrão:
+Os serviços `pncp-worker`, `pncp-open-worker`, `pncp-backfill-worker`,
+`compras-gov-worker` e `compras-gov-backfill-worker` mantêm a base
+sincronizada. Por padrão:
 
 - o `pncp-worker` consulta alterações recentes do PNCP a cada 5 minutos;
 - o `pncp-open-worker` varre oportunidades com recebimento de propostas aberto;
-- o `pncp-backfill` preenche os últimos 30 dias gradualmente, sem bloquear as
-  atualizações recentes;
+- o `pncp-backfill-worker` preenche os últimos 30 dias gradualmente, sem
+  bloquear as atualizações recentes;
+- o `compras-gov-worker` consulta o Compras.gov.br a cada 15 minutos;
+- o `compras-gov-backfill-worker` recupera histórico legado em lotes
+  gradualmente;
 - atualiza registros existentes usando o identificador do PNCP;
 - marca como encerradas as oportunidades cuja data de encerramento já passou.
 - atualiza automaticamente a página de licitações aberta no navegador a cada
   5 minutos.
 
-Os serviços `compras-gov-worker` e `compras-gov-backfill` complementam a base
-com licitações e compras diretas dos módulos legados do Compras.gov.br. Registros
-marcados como pertencentes à Lei 14.133 não são importados novamente, pois já
-chegam pelo PNCP.
+Os registros do Compras.gov.br marcados como pertencentes à Lei 14.133 não são
+importados novamente, pois já chegam pelo PNCP.
 
 A listagem abre com o status `aberta`. O histórico continua disponível ao
 selecionar “Todos os status”. O backfill do Compras.gov.br persiste somente
