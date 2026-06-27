@@ -119,3 +119,49 @@ def test_filtra_licitacoes_por_divulgacao_e_encerramento() -> None:
 
         assert [item.fonte_id for item in resultado] == ["dentro"]
         assert contar_licitacoes(db, **filtros) == 1
+
+
+def test_ordena_licitacoes_por_divulgacao_mais_recente() -> None:
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(engine)
+
+    with Session(engine) as db:
+        db.add_all(
+            [
+                Licitacao(
+                    fonte="PNCP",
+                    fonte_id="abertura-recente",
+                    titulo="Abertura recente com divulgacao antiga",
+                    status="aberta",
+                    data_publicacao=date(2026, 6, 20),
+                    data_abertura=date(2026, 7, 5),
+                    dados_originais={},
+                ),
+                Licitacao(
+                    fonte="PNCP",
+                    fonte_id="divulgacao-recente",
+                    titulo="Divulgacao mais recente",
+                    status="aberta",
+                    data_publicacao=date(2026, 6, 26),
+                    data_abertura=date(2026, 6, 28),
+                    dados_originais={},
+                ),
+                Licitacao(
+                    fonte="PNCP",
+                    fonte_id="sem-divulgacao",
+                    titulo="Sem data de divulgacao",
+                    status="aberta",
+                    data_abertura=date(2026, 7, 10),
+                    dados_originais={},
+                ),
+            ]
+        )
+        db.commit()
+
+        resultado = listar_licitacoes(db, status="aberta")
+
+        assert [item.fonte_id for item in resultado] == [
+            "divulgacao-recente",
+            "abertura-recente",
+            "sem-divulgacao",
+        ]

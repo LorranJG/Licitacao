@@ -115,8 +115,8 @@ def listar_licitacoes(
 
     query = (
         query.order_by(
-            Licitacao.data_abertura.desc(),
-            Licitacao.data_publicacao.desc(),
+            Licitacao.data_publicacao.desc().nullslast(),
+            Licitacao.data_abertura.desc().nullslast(),
             Licitacao.id.desc(),
         )
         .offset(offset)
