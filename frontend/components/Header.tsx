@@ -80,7 +80,7 @@ export async function Header() {
               href="/login"
               className="focus-ring rounded-lg px-3 py-2 text-sm font-bold text-navy-800 hover:bg-navy-50"
             >
-              Entrar
+              Área do cliente
             </Link>
           )}
         </nav>

@@ -176,7 +176,7 @@ export function AuthForm({ mode, oauthError = null }: AuthFormProps) {
         ) : (
           <LogIn size={18} />
         )}
-        {isRegister ? "Criar conta" : "Entrar"}
+        {isRegister ? "Criar conta" : "Acessar área do cliente"}
       </button>
       <p className="text-center text-sm text-slate-600">
         {isRegister ? "Já possui uma conta?" : "Ainda não possui uma conta?"}{" "}
@@ -184,7 +184,7 @@ export function AuthForm({ mode, oauthError = null }: AuthFormProps) {
           href={isRegister ? "/login" : "/cadastro"}
           className="font-bold text-navy-700"
         >
-          {isRegister ? "Entrar" : "Cadastre-se"}
+          {isRegister ? "Área do cliente" : "Cadastre-se"}
         </Link>
       </p>
       </form>

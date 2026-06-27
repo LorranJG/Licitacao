@@ -80,7 +80,7 @@ export default async function ComprarPage({ searchParams }: ComprarPageProps) {
                     href="/login"
                     className="focus-ring inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 font-bold text-navy-800 transition hover:bg-slate-50"
                   >
-                    Ja tenho conta
+                    Área do cliente
                   </Link>
                 </div>
               )}

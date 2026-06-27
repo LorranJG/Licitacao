@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/AuthForm";
 import { getCurrentUser } from "@/lib/session";
 
-export const metadata = { title: "Entrar" };
+export const metadata = { title: "Área do cliente" };
 
 type LoginPageProps = {
   searchParams: Promise<{ erro?: string; erro_detalhe?: string }>;
@@ -36,18 +36,16 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     <main className="container-page py-14 sm:py-20">
       <section className="mx-auto max-w-md rounded-3xl border border-slate-200 bg-white p-7 shadow-card sm:p-9">
         <p className="text-sm font-bold uppercase tracking-[0.14em] text-navy-600">
-          Sua área
+          Área do cliente
         </p>
         <h1 className="mt-2 text-3xl font-bold text-navy-950">
-          Entre no Radar
+          Acesse sua conta
         </h1>
         <p className="mt-2 leading-7 text-slate-600">
-          Acesse seus favoritos, lembretes e notificações do Telegram.
+          Clientes com compra confirmada entram direto no Radar, sem passar
+          novamente pelo checkout.
         </p>
-        <AuthForm
-          mode="login"
-          oauthError={oauthError}
-        />
+        <AuthForm mode="login" oauthError={oauthError} />
       </section>
     </main>
   );
