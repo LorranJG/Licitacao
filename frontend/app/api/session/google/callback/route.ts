@@ -78,9 +78,12 @@ export async function GET(request: NextRequest) {
   const body = (await radarResponse.json()) as {
     access_token: string;
     expires_in: number;
+    usuario?: { acesso_liberado?: boolean };
   };
 
-  const response = NextResponse.redirect(new URL("/conta", publicUrl));
+  const response = NextResponse.redirect(
+    new URL(body.usuario?.acesso_liberado ? "/licitacoes" : "/comprar", publicUrl),
+  );
   response.cookies.set(SESSION_COOKIE, body.access_token, {
     httpOnly: true,
     sameSite: "lax",

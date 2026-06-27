@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import CurrentUser
+from app.dependencies.auth import CurrentUserWithAccess
 from app.models import AlertaBusca, BuscaSalva, EventoProduto, Licitacao, SyncState
 from app.schemas import (
     AtualizacaoFonteResponse,
@@ -74,7 +74,9 @@ def _response(db: Session, busca: BuscaSalva) -> BuscaSalvaResponse:
 
 
 @router.get("/buscas-salvas", response_model=list[BuscaSalvaResponse])
-def listar_buscas(usuario: CurrentUser, db: DatabaseSession) -> list[BuscaSalvaResponse]:
+def listar_buscas(
+    usuario: CurrentUserWithAccess, db: DatabaseSession
+) -> list[BuscaSalvaResponse]:
     buscas = db.scalars(
         select(BuscaSalva)
         .where(BuscaSalva.usuario_id == usuario.id)
@@ -90,7 +92,7 @@ def listar_buscas(usuario: CurrentUser, db: DatabaseSession) -> list[BuscaSalvaR
 )
 def criar_busca(
     payload: BuscaSalvaCreateRequest,
-    usuario: CurrentUser,
+    usuario: CurrentUserWithAccess,
     db: DatabaseSession,
 ) -> BuscaSalvaResponse:
     filtros = _normalizar_filtros(payload.filtros)
@@ -118,7 +120,7 @@ def criar_busca(
 def atualizar_busca(
     busca_id: int,
     payload: BuscaSalvaUpdateRequest,
-    usuario: CurrentUser,
+    usuario: CurrentUserWithAccess,
     db: DatabaseSession,
 ) -> BuscaSalvaResponse:
     busca = db.scalar(
@@ -137,7 +139,7 @@ def atualizar_busca(
 
 @router.delete("/buscas-salvas/{busca_id}", status_code=204)
 def excluir_busca(
-    busca_id: int, usuario: CurrentUser, db: DatabaseSession
+    busca_id: int, usuario: CurrentUserWithAccess, db: DatabaseSession
 ) -> Response:
     busca = db.scalar(
         select(BuscaSalva).where(
@@ -154,7 +156,7 @@ def excluir_busca(
 @router.post("/eventos", response_model=MessageResponse, status_code=201)
 def criar_evento(
     payload: EventoCreateRequest,
-    usuario: CurrentUser,
+    usuario: CurrentUserWithAccess,
     db: DatabaseSession,
 ) -> MessageResponse:
     registrar_evento(

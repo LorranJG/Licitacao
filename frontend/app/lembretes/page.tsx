@@ -17,7 +17,9 @@ function formatDateTime(value: string): string {
 }
 
 export default async function LembretesPage() {
-  if (!(await getCurrentUser())) redirect("/login");
+  const usuario = await getCurrentUser();
+  if (!usuario) redirect("/login");
+  if (!usuario.acesso_liberado) redirect("/comprar");
   const { lembretes } = await getAccountData();
 
   return (

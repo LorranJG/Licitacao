@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.database import get_db
-from app.dependencies.auth import CurrentUser
+from app.dependencies.auth import CurrentUserWithAccess
 from app.models import Favorito, Lembrete, Licitacao
 from app.schemas import (
     FavoritoResponse,
@@ -22,7 +22,7 @@ DatabaseSession = Annotated[Session, Depends(get_db)]
 
 @router.get("/favoritos", response_model=list[FavoritoResponse])
 def listar_favoritos(
-    usuario: CurrentUser, db: DatabaseSession
+    usuario: CurrentUserWithAccess, db: DatabaseSession
 ) -> list[Favorito]:
     return list(
         db.scalars(
@@ -39,7 +39,7 @@ def listar_favoritos(
     response_model=FavoritoStatusResponse,
 )
 def status_favorito(
-    licitacao_id: int, usuario: CurrentUser, db: DatabaseSession
+    licitacao_id: int, usuario: CurrentUserWithAccess, db: DatabaseSession
 ) -> FavoritoStatusResponse:
     favorito = db.scalar(
         select(Favorito).where(
@@ -56,7 +56,7 @@ def status_favorito(
     status_code=status.HTTP_201_CREATED,
 )
 def adicionar_favorito(
-    licitacao_id: int, usuario: CurrentUser, db: DatabaseSession
+    licitacao_id: int, usuario: CurrentUserWithAccess, db: DatabaseSession
 ) -> Favorito:
     licitacao = db.get(Licitacao, licitacao_id)
     if licitacao is None:
@@ -89,7 +89,7 @@ def adicionar_favorito(
 
 @router.delete("/favoritos/{licitacao_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remover_favorito(
-    licitacao_id: int, usuario: CurrentUser, db: DatabaseSession
+    licitacao_id: int, usuario: CurrentUserWithAccess, db: DatabaseSession
 ) -> Response:
     favorito = db.scalar(
         select(Favorito).where(
@@ -105,7 +105,7 @@ def remover_favorito(
 
 @router.get("/lembretes", response_model=list[LembreteResponse])
 def listar_lembretes(
-    usuario: CurrentUser, db: DatabaseSession
+    usuario: CurrentUserWithAccess, db: DatabaseSession
 ) -> list[Lembrete]:
     return list(
         db.scalars(
@@ -124,7 +124,7 @@ def listar_lembretes(
 )
 def criar_lembrete(
     payload: LembreteCreateRequest,
-    usuario: CurrentUser,
+    usuario: CurrentUserWithAccess,
     db: DatabaseSession,
 ) -> Lembrete:
     lembrar_em = payload.lembrar_em
@@ -159,7 +159,7 @@ def criar_lembrete(
 
 @router.delete("/lembretes/{lembrete_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remover_lembrete(
-    lembrete_id: int, usuario: CurrentUser, db: DatabaseSession
+    lembrete_id: int, usuario: CurrentUserWithAccess, db: DatabaseSession
 ) -> Response:
     lembrete = db.scalar(
         select(Lembrete).where(

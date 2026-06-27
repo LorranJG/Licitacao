@@ -8,6 +8,7 @@ from sqlalchemy.pool import StaticPool
 from app.database import Base, get_db
 from app.main import app
 from app.models import Licitacao
+from app.routes.pagamentos import _liberar_acesso
 
 
 def test_fluxo_de_conta_favorito_e_validacao_de_lembrete(monkeypatch) -> None:
@@ -63,7 +64,24 @@ def test_fluxo_de_conta_favorito_e_validacao_de_lembrete(monkeypatch) -> None:
             json={"token": tokens["verificacao"]},
         )
         assert confirmar.status_code == 200
-        assert client.get("/auth/me", headers=headers).json()["email_verificado"] is True
+        me = client.get("/auth/me", headers=headers).json()
+        assert me["email_verificado"] is True
+        assert me["acesso_liberado"] is False
+
+        bloqueado = client.post(f"/favoritos/{licitacao_id}", headers=headers)
+        assert bloqueado.status_code == 402
+
+        with Session(engine) as db:
+            _liberar_acesso(
+                db,
+                {
+                    "id": "cs_test_conta",
+                    "customer": "cus_test_conta",
+                    "payment_status": "paid",
+                    "metadata": {"usuario_id": str(me["id"])},
+                },
+            )
+        assert client.get("/auth/me", headers=headers).json()["acesso_liberado"] is True
 
         favorito = client.post(f"/favoritos/{licitacao_id}", headers=headers)
         assert favorito.status_code == 201

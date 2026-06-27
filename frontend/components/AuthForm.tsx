@@ -40,7 +40,7 @@ export function AuthForm({ mode, oauthError = null }: AuthFormProps) {
       if (!response.ok) {
         throw new Error(body.detail || "Não foi possível continuar.");
       }
-      router.push("/conta");
+      router.push(body.usuario?.acesso_liberado ? "/licitacoes" : "/comprar");
       router.refresh();
     } catch (submitError) {
       setError(

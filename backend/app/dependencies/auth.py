@@ -67,3 +67,15 @@ def get_current_user(
 
 
 CurrentUser = Annotated[Usuario, Depends(get_current_user)]
+
+
+def get_current_user_with_access(usuario: CurrentUser) -> Usuario:
+    if not usuario.acesso_liberado:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Compra necessaria para acessar este recurso.",
+        )
+    return usuario
+
+
+CurrentUserWithAccess = Annotated[Usuario, Depends(get_current_user_with_access)]

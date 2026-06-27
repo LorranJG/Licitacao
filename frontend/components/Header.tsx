@@ -40,7 +40,7 @@ export async function Header() {
           >
             Indicadores
           </Link>
-          {usuario ? (
+          {usuario?.acesso_liberado ? (
             <>
               <Link
                 href="/favoritos"
@@ -66,10 +66,10 @@ export async function Header() {
             </>
           ) : null}
           <Link
-            href="/licitacoes"
+            href={usuario && !usuario.acesso_liberado ? "/comprar" : "/licitacoes"}
             className="focus-ring rounded-lg bg-navy-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-navy-800"
           >
-            Ver licitações
+            {usuario && !usuario.acesso_liberado ? "Comprar" : "Ver licitações"}
           </Link>
           {usuario ? (
             <span className="hidden xl:block">

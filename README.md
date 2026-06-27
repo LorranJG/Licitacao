@@ -68,7 +68,8 @@ servidor web.
    ```
 
    Preencha pelo menos `POSTGRES_PASSWORD`, `JWT_SECRET`, `APP_PUBLIC_URL`,
-   `BACKEND_PUBLIC_URL` e `CORS_ORIGINS`.
+   `BACKEND_PUBLIC_URL`, `CORS_ORIGINS`, `STRIPE_SECRET_KEY`,
+   `STRIPE_WEBHOOK_SECRET` e `STRIPE_PRICE_ID`.
 
 3. Suba PostgreSQL, backend e workers de coleta:
 
@@ -121,6 +122,18 @@ SESSION_COOKIE_SECURE=true
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 ```
+
+### Pagamento e liberacao de acesso
+
+O cadastro cria a conta, mas o produto so fica disponivel depois da compra
+confirmada pelo Stripe. Configure no Stripe:
+
+- Produto/preco de pagamento unico e copie o `price_...` para `STRIPE_PRICE_ID`
+- Chave secreta `sk_...` em `STRIPE_SECRET_KEY`
+- Webhook apontando para `https://api.seu-dominio.com/pagamentos/webhook`
+- Eventos do webhook: `checkout.session.completed` e
+  `checkout.session.async_payment_succeeded`
+- Segredo do webhook `whsec_...` em `STRIPE_WEBHOOK_SECRET`
 
 ### Login com Google em producao
 

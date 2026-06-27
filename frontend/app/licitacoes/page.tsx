@@ -1,4 +1,5 @@
 import { FileSearch2 } from "lucide-react";
+import { redirect } from "next/navigation";
 
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { LicitacaoCard } from "@/components/LicitacaoCard";
@@ -6,7 +7,7 @@ import { LicitacaoFilters } from "@/components/LicitacaoFilters";
 import { Pagination } from "@/components/Pagination";
 import { SaveSearchButton } from "@/components/SaveSearchButton";
 import { getLicitacoes, getStatusDados } from "@/lib/api";
-import { getCurrentUser } from "@/lib/session";
+import { getCurrentUser, sessionToken } from "@/lib/session";
 
 export const metadata = {
   title: "Licitações",
@@ -45,9 +46,13 @@ export default async function LicitacoesPage({
   };
   const page = positiveInteger(first(rawParams.pagina), 1);
   const pageSize = 20;
-  const [result, usuario, statusDados] = await Promise.all([
-    getLicitacoes(filters, { page, pageSize }),
-    getCurrentUser(),
+  const token = await sessionToken();
+  if (!token) redirect("/login");
+  const usuario = await getCurrentUser();
+  if (!usuario) redirect("/login");
+  if (!usuario.acesso_liberado) redirect("/comprar");
+  const [result, statusDados] = await Promise.all([
+    getLicitacoes(filters, { page, pageSize }, token),
     getStatusDados(),
   ]);
   const totalPages = Math.max(1, Math.ceil(result.total / pageSize));

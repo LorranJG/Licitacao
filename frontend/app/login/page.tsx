@@ -23,7 +23,9 @@ const googleErrors: Record<string, string> = {
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  if (await getCurrentUser()) redirect("/conta");
+  const usuario = await getCurrentUser();
+  if (usuario?.acesso_liberado) redirect("/licitacoes");
+  if (usuario) redirect("/comprar");
   const { erro, erro_detalhe } = await searchParams;
   const oauthError = erro
     ? erro === "google_login_falhou" && erro_detalhe

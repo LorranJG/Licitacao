@@ -13,7 +13,7 @@ import {
   WalletCards,
 } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { DeadlineCountdown } from "@/components/DeadlineCountdown";
 import { FavoriteButton } from "@/components/FavoriteButton";
@@ -22,7 +22,7 @@ import { OfficialPortalLink } from "@/components/OfficialPortalLink";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getLicitacao } from "@/lib/api";
 import { sourceLabel } from "@/lib/licitacao";
-import { getCurrentUser } from "@/lib/session";
+import { getCurrentUser, sessionToken } from "@/lib/session";
 
 type DetailPageProps = {
   params: Promise<{ id: string }>;
@@ -57,8 +57,13 @@ export default async function LicitacaoDetailPage({ params }: DetailPageProps) {
   const numericId = Number(id);
   if (!Number.isInteger(numericId) || numericId <= 0) notFound();
 
-  const result = await getLicitacao(numericId);
+  const token = await sessionToken();
+  if (!token) redirect("/login");
   const usuario = await getCurrentUser();
+  if (!usuario) redirect("/login");
+  if (!usuario.acesso_liberado) redirect("/comprar");
+
+  const result = await getLicitacao(numericId, token);
   if (result.notFound) notFound();
 
   if (!result.data) {

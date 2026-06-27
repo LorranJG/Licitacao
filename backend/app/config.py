@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     telegram_bot_token: str | None = None
     telegram_bot_username: str | None = None
     telegram_webhook_secret: str | None = None
+    stripe_secret_key: str | None = None
+    stripe_webhook_secret: str | None = None
+    stripe_price_id: str | None = None
     pncp_base_url: str = "https://pncp.gov.br/api/consulta"
     pncp_modalidades: Annotated[list[int], NoDecode] = list(range(1, 14))
     pncp_max_pages: int = 100

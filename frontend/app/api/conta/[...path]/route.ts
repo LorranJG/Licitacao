@@ -21,6 +21,7 @@ async function proxy(request: NextRequest, context: RouteContext) {
       "favoritos",
       "lembretes",
       "telegram",
+      "pagamentos",
       "buscas-salvas",
       "eventos",
     ].includes(path[0] || "")

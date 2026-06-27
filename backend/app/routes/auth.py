@@ -77,6 +77,9 @@ def _usuario_response(usuario: Usuario) -> UsuarioResponse:
         telegram_conectado=usuario.telegram_chat_id is not None,
         telegram_username=usuario.telegram_username,
         email_verificado=usuario.email_verificado_em is not None,
+        acesso_liberado=usuario.acesso_liberado,
+        plano_status=usuario.plano_status,
+        acesso_liberado_em=usuario.acesso_liberado_em,
     )
 
 

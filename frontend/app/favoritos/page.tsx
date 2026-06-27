@@ -8,7 +8,9 @@ import { getAccountData, getCurrentUser } from "@/lib/session";
 export const metadata = { title: "Favoritos" };
 
 export default async function FavoritosPage() {
-  if (!(await getCurrentUser())) redirect("/login");
+  const usuario = await getCurrentUser();
+  if (!usuario) redirect("/login");
+  if (!usuario.acesso_liberado) redirect("/comprar");
   const { favoritos } = await getAccountData();
 
   return (

@@ -1,4 +1,4 @@
-import { Send } from "lucide-react";
+import { LockKeyhole, Send } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { AccountSettingsForm } from "@/components/AccountSettingsForm";
@@ -7,6 +7,7 @@ import {
   DeleteAccountButton,
   ResendVerificationButton,
 } from "@/components/AccountDangerActions";
+import { PurchaseButton } from "@/components/PurchaseButton";
 import { getCurrentUser } from "@/lib/session";
 
 export const metadata = { title: "Minha conta" };
@@ -42,6 +43,24 @@ export default async function ContaPage() {
             </div>
           </section>
         ) : null}
+        {!usuario.acesso_liberado ? (
+          <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6 sm:p-8">
+            <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
+              <div>
+                <h2 className="flex items-center gap-2 text-xl font-bold text-amber-950">
+                  <LockKeyhole size={21} />
+                  Acesso pendente
+                </h2>
+                <p className="mt-2 max-w-2xl leading-7 text-amber-900">
+                  Sua conta foi criada, mas o acesso ao Radar so sera liberado
+                  depois da compra confirmada.
+                </p>
+              </div>
+              <PurchaseButton />
+            </div>
+          </section>
+        ) : null}
+        {usuario.acesso_liberado ? (
         <section className="rounded-2xl border border-sky-200 bg-sky-50 p-6 sm:p-8">
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
             <div>
@@ -58,6 +77,7 @@ export default async function ContaPage() {
             <TelegramAction connected={usuario.telegram_conectado} />
           </div>
         </section>
+        ) : null}
         <AccountSettingsForm usuario={usuario} />
         <section className="rounded-2xl border border-red-200 bg-red-50 p-6 sm:p-8">
           <h2 className="text-xl font-bold text-red-950">Privacidade e dados</h2>

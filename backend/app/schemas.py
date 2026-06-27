@@ -165,6 +165,9 @@ class UsuarioResponse(BaseModel):
     telegram_conectado: bool = False
     telegram_username: str | None = None
     email_verificado: bool = False
+    acesso_liberado: bool = False
+    plano_status: str = "pendente"
+    acesso_liberado_em: datetime | None = None
 
 
 class UsuarioUpdateRequest(BaseModel):
@@ -217,6 +220,10 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     expires_in: int
     usuario: UsuarioResponse
+
+
+class CheckoutResponse(BaseModel):
+    url: str
 
 
 class FavoritoResponse(BaseModel):

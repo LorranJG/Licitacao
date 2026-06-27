@@ -131,6 +131,21 @@ class Usuario(Base):
         String(5), default="20:00", server_default="20:00"
     )
     ativo: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    acesso_liberado: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
+    )
+    acesso_liberado_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
+    plano_status: Mapped[str] = mapped_column(
+        String(30), default="pendente", server_default="pendente"
+    )
+    stripe_customer_id: Mapped[str | None] = mapped_column(
+        String(255), unique=True, index=True
+    )
+    stripe_checkout_session_id: Mapped[str | None] = mapped_column(
+        String(255), unique=True, index=True
+    )
     telegram_chat_id: Mapped[int | None] = mapped_column(
         BigInteger, unique=True, index=True
     )

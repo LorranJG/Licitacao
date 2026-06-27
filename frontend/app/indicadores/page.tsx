@@ -9,8 +9,10 @@ import {
   WalletCards,
 } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { getIndicadores } from "@/lib/api";
+import { getCurrentUser, sessionToken } from "@/lib/session";
 import type { IndicadorItem } from "@/types/licitacao";
 
 export const metadata = {
@@ -112,7 +114,12 @@ export default async function IndicadoresPage({
   const params = await searchParams;
   const rawStatus = Array.isArray(params.status) ? params.status[0] : params.status;
   const status = rawStatus === "todos" ? "todos" : "aberta";
-  const result = await getIndicadores(status);
+  const token = await sessionToken();
+  if (!token) redirect("/login");
+  const usuario = await getCurrentUser();
+  if (!usuario) redirect("/login");
+  if (!usuario.acesso_liberado) redirect("/comprar");
+  const result = await getIndicadores(status, token);
   const evolutionMax = Math.max(
     ...(result.data?.evolucao_mensal.map((month) => month.quantidade) ?? []),
     1,

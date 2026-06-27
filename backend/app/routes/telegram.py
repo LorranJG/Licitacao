@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.database import get_db
-from app.dependencies.auth import CurrentUser
+from app.dependencies.auth import CurrentUserWithAccess
 from app.schemas import TelegramLinkResponse, TelegramStatusResponse
 from app.services.telegram_service import (
     TelegramNotConfiguredError,
@@ -19,7 +19,7 @@ settings = get_settings()
 
 
 @router.get("/status", response_model=TelegramStatusResponse)
-def status_telegram(usuario: CurrentUser) -> TelegramStatusResponse:
+def status_telegram(usuario: CurrentUserWithAccess) -> TelegramStatusResponse:
     return TelegramStatusResponse(
         conectado=usuario.telegram_chat_id is not None,
         username=usuario.telegram_username,
@@ -28,7 +28,7 @@ def status_telegram(usuario: CurrentUser) -> TelegramStatusResponse:
 
 @router.post("/link", response_model=TelegramLinkResponse)
 def gerar_link(
-    usuario: CurrentUser, db: DatabaseSession
+    usuario: CurrentUserWithAccess, db: DatabaseSession
 ) -> TelegramLinkResponse:
     try:
         url, expira_em = criar_link_telegram(db, usuario)
@@ -40,7 +40,7 @@ def gerar_link(
 
 
 @router.delete("/link", status_code=status.HTTP_204_NO_CONTENT)
-def desconectar(usuario: CurrentUser, db: DatabaseSession) -> Response:
+def desconectar(usuario: CurrentUserWithAccess, db: DatabaseSession) -> Response:
     usuario.telegram_chat_id = None
     usuario.telegram_username = None
     usuario.telegram_link_token_hash = None

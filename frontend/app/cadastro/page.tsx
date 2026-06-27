@@ -6,7 +6,9 @@ import { getCurrentUser } from "@/lib/session";
 export const metadata = { title: "Criar conta" };
 
 export default async function CadastroPage() {
-  if (await getCurrentUser()) redirect("/conta");
+  const usuario = await getCurrentUser();
+  if (usuario?.acesso_liberado) redirect("/licitacoes");
+  if (usuario) redirect("/comprar");
   return (
     <main className="container-page py-14 sm:py-20">
       <section className="mx-auto max-w-md rounded-3xl border border-slate-200 bg-white p-7 shadow-card sm:p-9">

@@ -8,7 +8,9 @@ import { getAccountData, getCurrentUser } from "@/lib/session";
 export const metadata = { title: "Buscas salvas" };
 
 export default async function BuscasPage() {
-  if (!(await getCurrentUser())) redirect("/login");
+  const usuario = await getCurrentUser();
+  if (!usuario) redirect("/login");
+  if (!usuario.acesso_liberado) redirect("/comprar");
   const { buscas } = await getAccountData();
   return (
     <main className="container-page py-12 sm:py-16">

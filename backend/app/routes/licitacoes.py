@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.dependencies.auth import CurrentUserWithAccess
 from app.schemas import (
     ColetaComprasGovRequest,
     ColetaComprasGovResponse,
@@ -38,6 +39,7 @@ DatabaseSession = Annotated[Session, Depends(get_db)]
 def listar(
     response: Response,
     db: DatabaseSession,
+    _usuario: CurrentUserWithAccess,
     palavra_chave: str | None = None,
     uf: str | None = Query(default=None, min_length=2, max_length=2),
     municipio: str | None = None,
@@ -163,13 +165,18 @@ async def coletar_compras_gov(
 @router.get("/indicadores/resumo", response_model=IndicadoresResponse)
 def indicadores(
     db: DatabaseSession,
+    _usuario: CurrentUserWithAccess,
     status_licitacao: str | None = Query(default="aberta", alias="status"),
 ) -> IndicadoresResponse:
     return obter_indicadores(db, status=status_licitacao)
 
 
 @router.get("/{licitacao_id}", response_model=LicitacaoDetalheResponse)
-def detalhar(licitacao_id: int, db: DatabaseSession) -> LicitacaoDetalheResponse:
+def detalhar(
+    licitacao_id: int,
+    db: DatabaseSession,
+    _usuario: CurrentUserWithAccess,
+) -> LicitacaoDetalheResponse:
     licitacao = buscar_licitacao(db, licitacao_id)
     if licitacao is None:
         raise HTTPException(

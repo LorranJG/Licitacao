@@ -123,6 +123,9 @@ export type Usuario = {
   telegram_conectado: boolean;
   telegram_username: string | null;
   email_verificado: boolean;
+  acesso_liberado: boolean;
+  plano_status: string;
+  acesso_liberado_em: string | null;
 };
 
 export type Favorito = {

@@ -35,6 +35,7 @@ function apiBaseUrl(): string {
 export async function getLicitacoes(
   filters: LicitacaoFilters,
   pagination: LicitacaoPagination,
+  token?: string | null,
 ): Promise<ApiResult> {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => {
@@ -49,6 +50,7 @@ export async function getLicitacoes(
     const response = await fetch(
       `${apiBaseUrl()}/licitacoes?${params.toString()}`,
       {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         cache: "no-store",
         signal: AbortSignal.timeout(8000),
       },
@@ -69,9 +71,13 @@ export async function getLicitacoes(
   }
 }
 
-export async function getLicitacao(id: number): Promise<DetailResult> {
+export async function getLicitacao(
+  id: number,
+  token?: string | null,
+): Promise<DetailResult> {
   try {
     const response = await fetch(`${apiBaseUrl()}/licitacoes/${id}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       cache: "no-store",
       signal: AbortSignal.timeout(8000),
     });
@@ -100,12 +106,14 @@ export async function getLicitacao(id: number): Promise<DetailResult> {
 
 export async function getIndicadores(
   status = "aberta",
+  token?: string | null,
 ): Promise<IndicatorsResult> {
   try {
     const params = new URLSearchParams({ status });
     const response = await fetch(
       `${apiBaseUrl()}/licitacoes/indicadores/resumo?${params.toString()}`,
       {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         next: { revalidate: 300 },
         signal: AbortSignal.timeout(12000),
       },
