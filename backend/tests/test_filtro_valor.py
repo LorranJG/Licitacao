@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 
 from sqlalchemy import create_engine
@@ -67,3 +68,54 @@ def test_filtra_licitacoes_por_faixa_de_valor() -> None:
             )
             == 1
         )
+
+
+def test_filtra_licitacoes_por_divulgacao_e_encerramento() -> None:
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(engine)
+
+    with Session(engine) as db:
+        db.add_all(
+            [
+                Licitacao(
+                    fonte="PNCP",
+                    fonte_id="publicacao-fora",
+                    titulo="Divulgacao fora do periodo",
+                    status="aberta",
+                    data_publicacao=date(2026, 6, 25),
+                    data_encerramento=date(2026, 7, 10),
+                    dados_originais={},
+                ),
+                Licitacao(
+                    fonte="PNCP",
+                    fonte_id="encerramento-fora",
+                    titulo="Encerramento fora do periodo",
+                    status="aberta",
+                    data_publicacao=date(2026, 6, 26),
+                    data_encerramento=date(2026, 8, 1),
+                    dados_originais={},
+                ),
+                Licitacao(
+                    fonte="PNCP",
+                    fonte_id="dentro",
+                    titulo="Divulgacao e encerramento dentro dos periodos",
+                    status="aberta",
+                    data_publicacao=date(2026, 6, 26),
+                    data_encerramento=date(2026, 7, 12),
+                    dados_originais={},
+                ),
+            ]
+        )
+        db.commit()
+
+        filtros = {
+            "status": "aberta",
+            "data_inicio": date(2026, 6, 26),
+            "data_fim": date(2026, 6, 26),
+            "encerramento_inicio": date(2026, 7, 1),
+            "encerramento_fim": date(2026, 7, 31),
+        }
+        resultado = listar_licitacoes(db, **filtros)
+
+        assert [item.fonte_id for item in resultado] == ["dentro"]
+        assert contar_licitacoes(db, **filtros) == 1

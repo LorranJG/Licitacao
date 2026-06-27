@@ -7,6 +7,10 @@ type LicitacaoFiltersProps = {
     uf: string;
     modalidade: string;
     status: string;
+    data_inicio: string;
+    data_fim: string;
+    encerramento_inicio: string;
+    encerramento_fim: string;
     fonte: string;
     valor_minimo: string;
     valor_maximo: string;
@@ -136,6 +140,50 @@ export function LicitacaoFilters({ values }: LicitacaoFiltersProps) {
             <option value="PNCP">PNCP</option>
             <option value="Compras.gov.br">Compras.gov.br</option>
           </select>
+        </label>
+        <label className="space-y-1.5">
+          <span className="block text-sm font-bold text-navy-950">
+            Divulgacao de
+          </span>
+          <input
+            type="date"
+            name="data_inicio"
+            defaultValue={values.data_inicio}
+            className={fieldClass}
+          />
+        </label>
+        <label className="space-y-1.5">
+          <span className="block text-sm font-bold text-navy-950">
+            Divulgacao ate
+          </span>
+          <input
+            type="date"
+            name="data_fim"
+            defaultValue={values.data_fim}
+            className={fieldClass}
+          />
+        </label>
+        <label className="space-y-1.5">
+          <span className="block text-sm font-bold text-navy-950">
+            Encerramento de
+          </span>
+          <input
+            type="date"
+            name="encerramento_inicio"
+            defaultValue={values.encerramento_inicio}
+            className={fieldClass}
+          />
+        </label>
+        <label className="space-y-1.5">
+          <span className="block text-sm font-bold text-navy-950">
+            Encerramento ate
+          </span>
+          <input
+            type="date"
+            name="encerramento_fim"
+            defaultValue={values.encerramento_fim}
+            className={fieldClass}
+          />
         </label>
         <label className="space-y-1.5">
           <span className="block text-sm font-bold text-navy-950">

@@ -81,6 +81,10 @@ export type LicitacaoFilters = {
   uf: string;
   modalidade: string;
   status: string;
+  data_inicio: string;
+  data_fim: string;
+  encerramento_inicio: string;
+  encerramento_fim: string;
   fonte: string;
   valor_minimo: string;
   valor_maximo: string;

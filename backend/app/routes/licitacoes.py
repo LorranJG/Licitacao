@@ -45,6 +45,8 @@ def listar(
     status_licitacao: str | None = Query(default=None, alias="status"),
     data_inicio: date | None = None,
     data_fim: date | None = None,
+    encerramento_inicio: date | None = None,
+    encerramento_fim: date | None = None,
     fonte: str | None = None,
     valor_minimo: Decimal | None = Query(default=None, ge=0),
     valor_maximo: Decimal | None = Query(default=None, ge=0),
@@ -60,6 +62,20 @@ def listar(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="O valor mínimo não pode ser maior que o valor máximo.",
         )
+    if data_inicio is not None and data_fim is not None and data_inicio > data_fim:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="A data inicial de divulgacao nao pode ser maior que a data final.",
+        )
+    if (
+        encerramento_inicio is not None
+        and encerramento_fim is not None
+        and encerramento_inicio > encerramento_fim
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="A data inicial de encerramento nao pode ser maior que a data final.",
+        )
 
     filtros = {
         "palavra_chave": palavra_chave,
@@ -69,6 +85,8 @@ def listar(
         "status": status_licitacao,
         "data_inicio": data_inicio,
         "data_fim": data_fim,
+        "encerramento_inicio": encerramento_inicio,
+        "encerramento_fim": encerramento_fim,
         "fonte": fonte,
         "valor_minimo": valor_minimo,
         "valor_maximo": valor_maximo,

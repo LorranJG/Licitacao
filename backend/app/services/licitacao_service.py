@@ -24,6 +24,8 @@ def _aplicar_filtros(
     status: str | None = None,
     data_inicio: date | None = None,
     data_fim: date | None = None,
+    encerramento_inicio: date | None = None,
+    encerramento_fim: date | None = None,
     fonte: str | None = None,
     valor_minimo: Decimal | None = None,
     valor_maximo: Decimal | None = None,
@@ -50,6 +52,10 @@ def _aplicar_filtros(
         query = query.where(Licitacao.data_publicacao >= data_inicio)
     if data_fim:
         query = query.where(Licitacao.data_publicacao <= data_fim)
+    if encerramento_inicio:
+        query = query.where(Licitacao.data_encerramento >= encerramento_inicio)
+    if encerramento_fim:
+        query = query.where(Licitacao.data_encerramento <= encerramento_fim)
     if valor_minimo is not None:
         query = query.where(Licitacao.valor_estimado >= valor_minimo)
     if valor_maximo is not None:
@@ -81,6 +87,8 @@ def listar_licitacoes(
     status: str | None = None,
     data_inicio: date | None = None,
     data_fim: date | None = None,
+    encerramento_inicio: date | None = None,
+    encerramento_fim: date | None = None,
     fonte: str | None = None,
     valor_minimo: Decimal | None = None,
     valor_maximo: Decimal | None = None,
@@ -97,6 +105,8 @@ def listar_licitacoes(
         status=status,
         data_inicio=data_inicio,
         data_fim=data_fim,
+        encerramento_inicio=encerramento_inicio,
+        encerramento_fim=encerramento_fim,
         fonte=fonte,
         valor_minimo=valor_minimo,
         valor_maximo=valor_maximo,
@@ -125,6 +135,8 @@ def contar_licitacoes(
     status: str | None = None,
     data_inicio: date | None = None,
     data_fim: date | None = None,
+    encerramento_inicio: date | None = None,
+    encerramento_fim: date | None = None,
     fonte: str | None = None,
     valor_minimo: Decimal | None = None,
     valor_maximo: Decimal | None = None,
@@ -139,6 +151,8 @@ def contar_licitacoes(
         status=status,
         data_inicio=data_inicio,
         data_fim=data_fim,
+        encerramento_inicio=encerramento_inicio,
+        encerramento_fim=encerramento_fim,
         fonte=fonte,
         valor_minimo=valor_minimo,
         valor_maximo=valor_maximo,

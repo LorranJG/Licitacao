@@ -35,6 +35,10 @@ export default async function LicitacoesPage({
     modalidade: first(rawParams.modalidade),
     status:
       rawParams.status === undefined ? "aberta" : first(rawParams.status),
+    data_inicio: first(rawParams.data_inicio),
+    data_fim: first(rawParams.data_fim),
+    encerramento_inicio: first(rawParams.encerramento_inicio),
+    encerramento_fim: first(rawParams.encerramento_fim),
     fonte: first(rawParams.fonte),
     valor_minimo: first(rawParams.valor_minimo),
     valor_maximo: first(rawParams.valor_maximo),
