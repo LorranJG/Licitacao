@@ -5,6 +5,12 @@ import { backendUrl, SESSION_COOKIE } from "@/lib/session";
 const STATE_COOKIE = "google_oauth_state";
 const NONCE_COOKIE = "google_oauth_nonce";
 
+function clientIp(request: NextRequest): string {
+  return (request.headers.get("x-forwarded-for") || "")
+    .split(",")[0]
+    .trim();
+}
+
 function errorRedirect(
   request: NextRequest,
   error: string,
@@ -61,7 +67,10 @@ export async function GET(request: NextRequest) {
 
   const radarResponse = await fetch(`${backendUrl()}/auth/google`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "X-Real-IP": clientIp(request),
+    },
     body: JSON.stringify({ id_token: googleTokens.id_token, nonce }),
     cache: "no-store",
   });

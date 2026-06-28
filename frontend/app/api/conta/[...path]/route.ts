@@ -6,6 +6,12 @@ type RouteContext = {
   params: Promise<{ path: string[] }>;
 };
 
+function clientIp(request: NextRequest): string {
+  return (request.headers.get("x-forwarded-for") || "")
+    .split(",")[0]
+    .trim();
+}
+
 async function proxy(request: NextRequest, context: RouteContext) {
   const token = await sessionToken();
   if (!token) {
@@ -38,6 +44,7 @@ async function proxy(request: NextRequest, context: RouteContext) {
     method: request.method,
     headers: {
       Authorization: `Bearer ${token}`,
+      "X-Real-IP": clientIp(request),
       ...(body ? { "Content-Type": "application/json" } : {}),
     },
     body,

@@ -9,7 +9,10 @@ settings = get_settings()
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description="API para consulta e coleta de licitações públicas.",
+    description="API para consulta e coleta de licitacoes publicas.",
+    docs_url=None if settings.is_production else "/docs",
+    redoc_url=None if settings.is_production else "/redoc",
+    openapi_url=None if settings.is_production else "/openapi.json",
 )
 
 app.add_middleware(
@@ -32,8 +35,10 @@ app.include_router(mvp.router)
 
 @app.get("/", include_in_schema=False)
 def root() -> dict[str, str]:
-    return {
-        "message": "Radar Licitações API",
-        "docs": "/docs",
+    payload = {
+        "message": "Radar Licitacoes API",
         "health": "/health",
     }
+    if not settings.is_production:
+        payload["docs"] = "/docs"
+    return payload

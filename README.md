@@ -103,6 +103,93 @@ servidor web.
    certbot --nginx -d api.seu-dominio.com
    ```
 
+### Hardening da VPS
+
+Depois do primeiro deploy, aplique estas camadas no servidor:
+
+1. Firewall permitindo apenas SSH, HTTP e HTTPS:
+
+   ```bash
+   ufw allow OpenSSH
+   ufw allow 80/tcp
+   ufw allow 443/tcp
+   ufw --force enable
+   ufw status
+   ```
+
+2. Fail2ban para SSH e Nginx:
+
+   ```bash
+   apt install -y fail2ban
+   systemctl enable --now fail2ban
+   fail2ban-client status
+   ```
+
+3. SSH sem login por senha e sem root direto:
+
+   ```bash
+   adduser deploy
+   usermod -aG sudo,docker deploy
+   mkdir -p /home/deploy/.ssh
+   cp /root/.ssh/authorized_keys /home/deploy/.ssh/authorized_keys
+   chown -R deploy:deploy /home/deploy/.ssh
+   chmod 700 /home/deploy/.ssh
+   chmod 600 /home/deploy/.ssh/authorized_keys
+   ```
+
+   Edite `/etc/ssh/sshd_config`:
+
+   ```text
+   PermitRootLogin no
+   PasswordAuthentication no
+   PubkeyAuthentication yes
+   ```
+
+   Valide antes de fechar a sessao atual:
+
+   ```bash
+   sshd -t
+   systemctl reload ssh
+   ```
+
+4. Gere um `JWT_SECRET` forte, com pelo menos 32 caracteres:
+
+   ```bash
+   openssl rand -base64 48
+   ```
+
+   Coloque o valor em `.env.vps`. Em `ENVIRONMENT=production`, o backend nao
+   sobe se o segredo estiver fraco ou se `CORS_ORIGINS=*`.
+
+5. Backups automaticos do Postgres:
+
+   ```bash
+   chmod +x /opt/licitacao/deploy/scripts/backup_postgres.sh
+   /opt/licitacao/deploy/scripts/backup_postgres.sh
+   crontab -e
+   ```
+
+   Agende uma execucao diaria:
+
+   ```cron
+   15 3 * * * /opt/licitacao/deploy/scripts/backup_postgres.sh >> /var/log/licitacao-backup.log 2>&1
+   ```
+
+   Os backups ficam em `/opt/licitacao/backups/postgres` e sao mantidos por 14
+   dias por padrao.
+
+6. Monitoramento basico de logs:
+
+   ```bash
+   docker compose --env-file .env.vps -f docker-compose.prod.yml logs -f backend
+   journalctl -u nginx -f
+   fail2ban-client status sshd
+   ```
+
+Em producao, `/docs`, `/redoc` e `/openapi.json` ficam desativados no backend.
+O Nginx versionado em `deploy/nginx/licitacao-api.conf` tambem aplica headers
+de seguranca, limite de tamanho de request e rate limit de borda.
+
 ### Vercel
 
 Ao importar o repositorio, configure:

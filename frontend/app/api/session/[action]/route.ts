@@ -6,6 +6,12 @@ type RouteContext = {
   params: Promise<{ action: string }>;
 };
 
+function clientIp(request: NextRequest): string {
+  return (request.headers.get("x-forwarded-for") || "")
+    .split(",")[0]
+    .trim();
+}
+
 export async function POST(request: NextRequest, context: RouteContext) {
   const { action } = await context.params;
   if (action === "logout") {
@@ -26,7 +32,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   const response = await fetch(`${backendUrl()}/auth/${action}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "X-Real-IP": clientIp(request),
+    },
     body: await request.text(),
     cache: "no-store",
   });

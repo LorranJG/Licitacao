@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Annotated
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -71,6 +71,26 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             return [item.strip() for item in value.split(",") if item.strip()]
         return value
+
+    @model_validator(mode="after")
+    def validate_production_security(self) -> "Settings":
+        if self.environment.lower() != "production":
+            return self
+        if (
+            self.jwt_secret == "troque-esta-chave-em-producao"
+            or self.jwt_secret.startswith("troque-")
+            or len(self.jwt_secret) < 32
+        ):
+            raise ValueError(
+                "JWT_SECRET precisa ter pelo menos 32 caracteres em producao."
+            )
+        if "*" in self.cors_origins:
+            raise ValueError("CORS_ORIGINS nao pode usar '*' em producao.")
+        return self
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment.lower() == "production"
 
     @property
     def sqlalchemy_database_url(self) -> str:

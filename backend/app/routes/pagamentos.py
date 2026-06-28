@@ -11,6 +11,7 @@ from app.dependencies.auth import CurrentUser
 from app.models import Usuario
 from app.schemas import CheckoutResponse
 from app.services.conta_service import registrar_evento
+from app.services.rate_limit import rate_limit
 
 router = APIRouter(prefix="/pagamentos", tags=["Pagamentos"])
 DatabaseSession = Annotated[Session, Depends(get_db)]
@@ -22,7 +23,13 @@ def _stripe_configurado() -> bool:
 
 
 @router.post("/checkout", response_model=CheckoutResponse)
-def criar_checkout(usuario: CurrentUser, db: DatabaseSession) -> CheckoutResponse:
+def criar_checkout(
+    usuario: CurrentUser,
+    db: DatabaseSession,
+    _rate_limit: None = Depends(
+        rate_limit("pagamentos:checkout", max_requests=10, window_seconds=300)
+    ),
+) -> CheckoutResponse:
     if usuario.acesso_liberado:
         return CheckoutResponse(url=f"{settings.app_public_url.rstrip('/')}/licitacoes")
     if not _stripe_configurado():

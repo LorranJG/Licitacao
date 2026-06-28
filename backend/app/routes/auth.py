@@ -35,6 +35,7 @@ from app.services.conta_service import (
     hash_token,
     registrar_evento,
 )
+from app.services.rate_limit import rate_limit
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
 DatabaseSession = Annotated[Session, Depends(get_db)]
@@ -97,7 +98,13 @@ def _token_response(usuario: Usuario) -> TokenResponse:
     response_model=TokenResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def registrar(payload: UsuarioRegistroRequest, db: DatabaseSession) -> TokenResponse:
+def registrar(
+    payload: UsuarioRegistroRequest,
+    db: DatabaseSession,
+    _rate_limit: None = Depends(
+        rate_limit("auth:registrar", max_requests=5, window_seconds=600)
+    ),
+) -> TokenResponse:
     email = payload.email.strip().lower()
     if "@" not in email:
         raise HTTPException(
@@ -128,7 +135,13 @@ def registrar(payload: UsuarioRegistroRequest, db: DatabaseSession) -> TokenResp
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(payload: UsuarioLoginRequest, db: DatabaseSession) -> TokenResponse:
+def login(
+    payload: UsuarioLoginRequest,
+    db: DatabaseSession,
+    _rate_limit: None = Depends(
+        rate_limit("auth:login", max_requests=10, window_seconds=300)
+    ),
+) -> TokenResponse:
     email = payload.email.strip().lower()
     usuario = db.scalar(
         select(Usuario).where(func.lower(Usuario.email) == email)
@@ -142,7 +155,13 @@ def login(payload: UsuarioLoginRequest, db: DatabaseSession) -> TokenResponse:
 
 
 @router.post("/google", response_model=TokenResponse)
-def login_google(payload: GoogleLoginRequest, db: DatabaseSession) -> TokenResponse:
+def login_google(
+    payload: GoogleLoginRequest,
+    db: DatabaseSession,
+    _rate_limit: None = Depends(
+        rate_limit("auth:google", max_requests=20, window_seconds=300)
+    ),
+) -> TokenResponse:
     try:
         claims = validar_google_id_token(payload.id_token, payload.nonce)
     except GoogleAuthError as exc:
@@ -218,6 +237,9 @@ def alterar_senha(
     payload: AlterarSenhaRequest,
     usuario: CurrentUser,
     db: DatabaseSession,
+    _rate_limit: None = Depends(
+        rate_limit("auth:alterar-senha", max_requests=5, window_seconds=300)
+    ),
 ) -> MessageResponse:
     if usuario.senha_hash and not verificar_senha(
         payload.senha_atual or "", usuario.senha_hash
@@ -238,7 +260,11 @@ def alterar_senha(
 
 @router.post("/solicitar-redefinicao", response_model=MessageResponse)
 def solicitar_redefinicao(
-    payload: SolicitarRedefinicaoRequest, db: DatabaseSession
+    payload: SolicitarRedefinicaoRequest,
+    db: DatabaseSession,
+    _rate_limit: None = Depends(
+        rate_limit("auth:solicitar-redefinicao", max_requests=5, window_seconds=600)
+    ),
 ) -> MessageResponse:
     email = payload.email.strip().lower()
     usuario = db.scalar(select(Usuario).where(func.lower(Usuario.email) == email))
@@ -252,7 +278,11 @@ def solicitar_redefinicao(
 
 @router.post("/redefinir-senha", response_model=MessageResponse)
 def redefinir_senha(
-    payload: RedefinirSenhaRequest, db: DatabaseSession
+    payload: RedefinirSenhaRequest,
+    db: DatabaseSession,
+    _rate_limit: None = Depends(
+        rate_limit("auth:redefinir-senha", max_requests=5, window_seconds=600)
+    ),
 ) -> MessageResponse:
     agora = datetime.now(timezone.utc)
     usuario = db.scalar(
@@ -273,7 +303,11 @@ def redefinir_senha(
 
 @router.post("/confirmar-email", response_model=MessageResponse)
 def confirmar_email(
-    payload: ConfirmarEmailRequest, db: DatabaseSession
+    payload: ConfirmarEmailRequest,
+    db: DatabaseSession,
+    _rate_limit: None = Depends(
+        rate_limit("auth:confirmar-email", max_requests=20, window_seconds=600)
+    ),
 ) -> MessageResponse:
     agora = datetime.now(timezone.utc)
     usuario = db.scalar(
