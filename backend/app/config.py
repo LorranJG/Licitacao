@@ -30,13 +30,13 @@ class Settings(BaseSettings):
     pncp_base_url: str = "https://pncp.gov.br/api/consulta"
     pncp_modalidades: Annotated[list[int], NoDecode] = list(range(1, 14))
     pncp_max_pages: int = 100
-    pncp_sync_interval_seconds: int = 300
+    pncp_sync_interval_seconds: int = 900
     pncp_open_sync_interval_seconds: int = 21600
     pncp_open_start_delay_seconds: int = 600
     pncp_open_horizon_days: int = 180
     pncp_open_max_pages: int = 500
     pncp_initial_backfill_days: int = 30
-    pncp_backfill_interval_seconds: int = 300
+    pncp_backfill_interval_seconds: int = 900
     pncp_backfill_start_delay_seconds: int = 120
     pncp_request_delay_seconds: float = 1.5
     compras_gov_base_url: str = "https://dadosabertos.compras.gov.br"
@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     compras_gov_sync_lookback_days: int = 7
     compras_gov_initial_backfill_days: int = 730
     compras_gov_backfill_chunk_days: int = 90
-    compras_gov_backfill_interval_seconds: int = 300
+    compras_gov_backfill_interval_seconds: int = 900
     compras_gov_backfill_start_delay_seconds: int = 300
     compras_gov_request_delay_seconds: float = 0.5
     compras_gov_uasg_enrichment_limit: int = 50

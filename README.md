@@ -261,13 +261,13 @@ Os serviços `pncp-worker`, `pncp-open-worker`, `pncp-backfill-worker`,
 `compras-gov-worker` e `compras-gov-backfill-worker` mantêm a base
 sincronizada. Por padrão:
 
-- o `pncp-worker` consulta alterações recentes do PNCP a cada 5 minutos;
+- o `pncp-worker` consulta alterações recentes do PNCP a cada 15 minutos;
 - o `pncp-open-worker` varre oportunidades com recebimento de propostas aberto;
-- o `pncp-backfill-worker` preenche os últimos 30 dias gradualmente, sem
+- o `pncp-backfill-worker` preenche os últimos 30 dias gradualmente a cada 15 minutos, sem
   bloquear as atualizações recentes;
 - o `compras-gov-worker` consulta o Compras.gov.br a cada 15 minutos;
 - o `compras-gov-backfill-worker` recupera histórico legado em lotes
-  gradualmente;
+  gradualmente a cada 15 minutos;
 - atualiza registros existentes usando o identificador do PNCP;
 - marca como encerradas as oportunidades cuja data de encerramento já passou.
 - atualiza automaticamente a página de licitações aberta no navegador a cada
