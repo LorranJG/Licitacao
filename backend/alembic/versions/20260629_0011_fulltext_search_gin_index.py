@@ -19,7 +19,7 @@ def upgrade() -> None:
         CREATE INDEX IF NOT EXISTS ix_licitacoes_busca_fts
         ON licitacoes
         USING GIN (
-            to_tsvector('portuguese', concat_ws(' ', titulo, objeto, orgao))
+            to_tsvector('portuguese'::regconfig, concat_ws(' ', titulo, objeto, orgao))
         )
     """)
 
