@@ -181,7 +181,7 @@ def detalhar(
     licitacao_id: int,
     db: DatabaseSession,
     _usuario: CurrentUserWithAccess,
-) -> LicitacaoDetalheResponse:
+):
     licitacao = buscar_licitacao(db, licitacao_id)
     if licitacao is None:
         raise HTTPException(

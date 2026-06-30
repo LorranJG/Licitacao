@@ -21,9 +21,7 @@ DatabaseSession = Annotated[Session, Depends(get_db)]
 
 
 @router.get("/favoritos", response_model=list[FavoritoResponse])
-def listar_favoritos(
-    usuario: CurrentUserWithAccess, db: DatabaseSession
-) -> list[Favorito]:
+def listar_favoritos(usuario: CurrentUserWithAccess, db: DatabaseSession):
     return list(
         db.scalars(
             select(Favorito)
@@ -104,9 +102,7 @@ def remover_favorito(
 
 
 @router.get("/lembretes", response_model=list[LembreteResponse])
-def listar_lembretes(
-    usuario: CurrentUserWithAccess, db: DatabaseSession
-) -> list[Lembrete]:
+def listar_lembretes(usuario: CurrentUserWithAccess, db: DatabaseSession):
     return list(
         db.scalars(
             select(Lembrete)

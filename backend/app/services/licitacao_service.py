@@ -274,7 +274,7 @@ def gerar_resumo_automatico(licitacao: Licitacao) -> dict[str, Any]:
     }
 
 
-def detalhar_licitacao(licitacao: Licitacao) -> dict[str, Any]:
+def detalhar_licitacao(licitacao: Licitacao) -> dict[str, Any]:  # FastAPI coerces to LicitacaoDetalheResponse via response_model
     dados = {
         coluna.name: getattr(licitacao, coluna.name)
         for coluna in Licitacao.__table__.columns
