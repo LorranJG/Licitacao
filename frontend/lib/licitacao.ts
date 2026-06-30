@@ -1,7 +1,7 @@
 import type { Licitacao } from "@/types/licitacao";
 
 export function getDeadline(licitacao: Licitacao): string | null {
-  const raw = licitacao.dados_originais;
+  const raw = licitacao.dados_originais ?? {};
   const exact =
     raw.dataEncerramentoProposta ||
     raw.data_encerramento_proposta ||
