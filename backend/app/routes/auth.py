@@ -221,11 +221,11 @@ def atualizar_me(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="O valor mínimo não pode ser maior que o valor máximo.",
         )
-    for field, value in payload.model_dump().items():
+    for field, value in payload.model_dump(exclude_unset=True).items():
         if isinstance(value, str):
             value = value.strip() or None
-        elif isinstance(value, list):
-            value = list(dict.fromkeys(str(item).strip() for item in value if str(item).strip()))
+        elif isinstance(value, list) and (not value or isinstance(value[0], str)):
+            value = list(dict.fromkeys(item.strip() for item in value if item.strip()))
         setattr(usuario, field, value)
     db.commit()
     db.refresh(usuario)

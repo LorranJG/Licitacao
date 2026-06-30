@@ -43,14 +43,14 @@ class Licitacao(Base):
     uf: Mapped[str | None] = mapped_column(String(2), index=True)
     municipio: Mapped[str | None] = mapped_column(String(160))
     valor_estimado: Mapped[Decimal | None] = mapped_column(Numeric(18, 2))
-    data_publicacao: Mapped[date | None] = mapped_column(Date)
+    data_publicacao: Mapped[date | None] = mapped_column(Date, index=True)
     data_abertura: Mapped[date | None] = mapped_column(Date)
     data_encerramento: Mapped[date | None] = mapped_column(Date)
     data_atualizacao: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     link_original: Mapped[str | None] = mapped_column(Text)
     dados_originais: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     criado_em: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
+        DateTime(timezone=True), server_default=func.now(), index=True
     )
     atualizado_em: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

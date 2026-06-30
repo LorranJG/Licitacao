@@ -128,11 +128,7 @@ async def stripe_webhook(request: Request, db: DatabaseSession) -> dict[str, boo
         event = stripe.Webhook.construct_event(
             payload, signature, settings.stripe_webhook_secret
         )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail="Webhook invalido.") from exc
-    except Exception as exc:
-        if exc.__class__.__name__ != "SignatureVerificationError":
-            raise
+    except (ValueError, stripe.SignatureVerificationError) as exc:
         raise HTTPException(status_code=400, detail="Webhook invalido.") from exc
 
     if event["type"] in {

@@ -40,7 +40,7 @@ async def processar_busca(busca_id: int) -> int:
             db,
             **filtros,
             criado_apos=desde,
-            limite=10,
+            limite=100,
         )
         busca.ultima_verificacao_em = datetime.now(timezone.utc)
         ineditas = []
@@ -57,12 +57,16 @@ async def processar_busca(busca_id: int) -> int:
             db.commit()
             return 0
 
+        # Notifica apenas as primeiras 20 para não sobrecarregar a mensagem
+        para_notificar = ineditas[:20]
+        total_ineditas = len(ineditas)
+
         linhas = [
             f"<b>{html.escape(busca.nome)}</b>",
-            f"{len(ineditas)} nova(s) oportunidade(s):",
+            f"{total_ineditas} nova(s) oportunidade(s):",
         ]
         botoes = []
-        for licitacao in ineditas:
+        for licitacao in para_notificar:
             linhas.append(f"\n• {html.escape(licitacao.titulo[:130])}")
             botoes.append(
                 [
@@ -72,6 +76,8 @@ async def processar_busca(busca_id: int) -> int:
                     }
                 ]
             )
+        if total_ineditas > 20:
+            linhas.append(f"\n...e mais {total_ineditas - 20} oportunidade(s).")
         texto = "\n".join(linhas)
         enviado = False
         erro = None
@@ -85,12 +91,17 @@ async def processar_busca(busca_id: int) -> int:
                 links = "".join(
                     f"<li><a href='{settings.app_public_url}/licitacoes/{item.id}'>"
                     f"{html.escape(item.titulo)}</a></li>"
-                    for item in ineditas
+                    for item in para_notificar
+                )
+                rodape = (
+                    f"<p>...e mais {total_ineditas - 20} oportunidade(s).</p>"
+                    if total_ineditas > 20
+                    else ""
                 )
                 enviar_email(
                     destinatario=busca.usuario.email,
                     assunto=f"Novas oportunidades: {busca.nome}",
-                    html=f"<p>Encontramos novas oportunidades.</p><ul>{links}</ul>",
+                    html=f"<p>Encontramos {total_ineditas} nova(s) oportunidade(s).</p><ul>{links}</ul>{rodape}",
                 )
                 enviado = True
         except Exception as exc:
@@ -98,6 +109,7 @@ async def processar_busca(busca_id: int) -> int:
             logger.exception("Falha ao enviar alerta da busca %s.", busca.id)
 
         agora = datetime.now(timezone.utc) if enviado else None
+        # Marca todas como vistas (não só as notificadas) para não re-alertar no próximo ciclo
         for licitacao in ineditas:
             db.add(
                 AlertaBusca(
@@ -108,7 +120,7 @@ async def processar_busca(busca_id: int) -> int:
                 )
             )
         db.commit()
-        return len(ineditas)
+        return total_ineditas
 
 
 async def executar_ciclo() -> int:

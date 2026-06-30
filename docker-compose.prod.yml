@@ -104,5 +104,33 @@ services:
       backend:
         condition: service_healthy
 
+  telegram-reminder-worker:
+    build:
+      context: ./backend
+    command: ["python", "-m", "app.jobs.enviar_lembretes"]
+    restart: unless-stopped
+    env_file:
+      - ${ENV_FILE:-.env.vps}
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-radar_licitacoes}
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  saved-search-alert-worker:
+    build:
+      context: ./backend
+    command: ["python", "-m", "app.jobs.enviar_alertas_buscas"]
+    restart: unless-stopped
+    env_file:
+      - ${ENV_FILE:-.env.vps}
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-radar_licitacoes}
+    depends_on:
+      backend:
+        condition: service_healthy
+
 volumes:
   postgres_data:

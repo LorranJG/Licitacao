@@ -1,4 +1,3 @@
-from collections import defaultdict
 from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 import re
@@ -400,19 +399,18 @@ def obter_indicadores(db: Session, status: str | None = "aberta") -> dict[str, A
         ]
 
     inicio_historico = date(hoje.year - 1, hoje.month, 1)
-    publicacoes = db.execute(
-        select(Licitacao.data_publicacao, Licitacao.valor_estimado).where(
-            *filtros,
-            Licitacao.data_publicacao >= inicio_historico,
+    periodo_label = func.to_char(Licitacao.data_publicacao, "YYYY-MM").label("periodo")
+    linhas_mensais = db.execute(
+        select(
+            periodo_label,
+            func.count(Licitacao.id).label("quantidade"),
+            func.coalesce(func.sum(Licitacao.valor_estimado), 0).label("valor_estimado"),
         )
+        .where(*filtros, Licitacao.data_publicacao >= inicio_historico)
+        .group_by(periodo_label)
+        .order_by(periodo_label)
+        .limit(12)
     ).all()
-    meses: dict[str, dict[str, Any]] = defaultdict(
-        lambda: {"quantidade": 0, "valor_estimado": Decimal("0")}
-    )
-    for data_publicacao, valor in publicacoes:
-        periodo = data_publicacao.strftime("%Y-%m")
-        meses[periodo]["quantidade"] += 1
-        meses[periodo]["valor_estimado"] += valor or Decimal("0")
 
     return {
         "total": total,
@@ -445,8 +443,12 @@ def obter_indicadores(db: Session, status: str | None = "aberta") -> dict[str, A
         "por_fonte": agrupar(Licitacao.fonte, 5),
         "por_status": agrupar(Licitacao.status, 8),
         "evolucao_mensal": [
-            {"periodo": periodo, **valores}
-            for periodo, valores in sorted(meses.items())[-12:]
+            {
+                "periodo": str(periodo),
+                "quantidade": int(quantidade),
+                "valor_estimado": valor or Decimal("0"),
+            }
+            for periodo, quantidade, valor in linhas_mensais
         ],
     }
 
