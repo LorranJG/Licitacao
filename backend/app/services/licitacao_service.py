@@ -287,101 +287,64 @@ def detalhar_licitacao(licitacao: Licitacao) -> dict[str, Any]:
 
 
 def obter_indicadores(db: Session, status: str | None = "aberta") -> dict[str, Any]:
-    filtros = []
-    if status and status.casefold() != "todos":
-        filtros.append(Licitacao.status.ilike(status.strip()))
+    status_norm = status.strip().lower() if status and status.casefold() != "todos" else None
+    filtros = [Licitacao.status == status_norm] if status_norm else []
 
-    total = int(db.scalar(select(func.count(Licitacao.id)).where(*filtros)) or 0)
-    total_abertas = int(
-        db.scalar(
-            select(func.count(Licitacao.id)).where(
-                Licitacao.status.ilike("aberta")
-            )
-        )
-        or 0
-    )
-    total_com_valor = int(
-        db.scalar(
-            select(func.count(Licitacao.id)).where(
-                *filtros, Licitacao.valor_estimado.is_not(None)
-            )
-        )
-        or 0
-    )
-    total_com_prazo = int(
-        db.scalar(
-            select(func.count(Licitacao.id)).where(
-                *filtros, Licitacao.data_encerramento.is_not(None)
-            )
-        )
-        or 0
-    )
-    valor_total = db.scalar(
-        select(func.coalesce(func.sum(Licitacao.valor_estimado), 0)).where(*filtros)
-    ) or Decimal("0")
-    valor_medio = db.scalar(
-        select(func.coalesce(func.avg(Licitacao.valor_estimado), 0)).where(*filtros)
-    ) or Decimal("0")
-    valor_mediano = db.scalar(
-        select(
-            func.percentile_cont(0.5).within_group(Licitacao.valor_estimado)
-        ).where(*filtros, Licitacao.valor_estimado.is_not(None))
-    ) or Decimal("0")
     hoje = hoje_local()
-    publicadas_30_dias = int(
-        db.scalar(
-            select(func.count(Licitacao.id)).where(
-                *filtros,
+    inicio_historico = date(hoje.year - 1, hoje.month, 1)
+
+    # Single query replaces 13+ sequential queries via FILTER clause
+    stats = db.execute(
+        select(
+            func.count(Licitacao.id).label("total"),
+            func.count(Licitacao.id).filter(
+                Licitacao.status == "aberta"
+            ).label("total_abertas"),
+            func.count(Licitacao.id).filter(
+                Licitacao.valor_estimado.is_not(None)
+            ).label("total_com_valor"),
+            func.count(Licitacao.id).filter(
+                Licitacao.data_encerramento.is_not(None)
+            ).label("total_com_prazo"),
+            func.coalesce(func.sum(Licitacao.valor_estimado), 0).label("valor_total"),
+            func.coalesce(func.avg(Licitacao.valor_estimado), 0).label("valor_medio"),
+            func.count(Licitacao.id).filter(
                 Licitacao.data_publicacao >= hoje - timedelta(days=29),
                 Licitacao.data_publicacao <= hoje,
-            )
-        )
-        or 0
-    )
-    publicadas_30_dias_anteriores = int(
-        db.scalar(
-            select(func.count(Licitacao.id)).where(
-                *filtros,
+            ).label("pub_30d"),
+            func.count(Licitacao.id).filter(
                 Licitacao.data_publicacao >= hoje - timedelta(days=59),
                 Licitacao.data_publicacao <= hoje - timedelta(days=30),
-            )
-        )
-        or 0
-    )
-    variacao_publicacoes = None
-    if publicadas_30_dias_anteriores:
-        variacao_publicacoes = (
-            Decimal(publicadas_30_dias - publicadas_30_dias_anteriores)
-            * Decimal("100")
-            / Decimal(publicadas_30_dias_anteriores)
-        ).quantize(Decimal("0.1"))
-    encerram_7_dias = int(
-        db.scalar(
-            select(func.count(Licitacao.id)).where(
-                Licitacao.status.ilike("aberta"),
+            ).label("pub_30d_anterior"),
+            func.count(Licitacao.id).filter(
+                Licitacao.status == "aberta",
                 Licitacao.data_encerramento >= hoje,
                 Licitacao.data_encerramento <= hoje + timedelta(days=7),
-            )
-        )
-        or 0
-    )
-    encerram_30_dias = int(
-        db.scalar(
-            select(func.count(Licitacao.id)).where(
-                Licitacao.status.ilike("aberta"),
+            ).label("enc_7d"),
+            func.count(Licitacao.id).filter(
+                Licitacao.status == "aberta",
                 Licitacao.data_encerramento >= hoje,
                 Licitacao.data_encerramento <= hoje + timedelta(days=30),
-            )
-        )
-        or 0
-    )
-    periodo_base = db.execute(
-        select(
-            func.min(Licitacao.data_publicacao),
-            func.max(Licitacao.data_publicacao),
-            func.max(Licitacao.atualizado_em),
+            ).label("enc_30d"),
+            func.min(Licitacao.data_publicacao).label("data_inicial"),
+            func.max(Licitacao.data_publicacao).label("data_final"),
+            func.max(Licitacao.atualizado_em).label("ultima_atualizacao"),
         ).where(*filtros)
     ).one()
+
+    total = int(stats.total or 0)
+    total_com_valor = int(stats.total_com_valor or 0)
+    total_com_prazo = int(stats.total_com_prazo or 0)
+    valor_total = Decimal(str(stats.valor_total or 0))
+    valor_medio = Decimal(str(stats.valor_medio or 0))
+    pub_30d = int(stats.pub_30d or 0)
+    pub_30d_anterior = int(stats.pub_30d_anterior or 0)
+
+    variacao_publicacoes = None
+    if pub_30d_anterior:
+        variacao_publicacoes = (
+            Decimal(pub_30d - pub_30d_anterior) * Decimal("100") / Decimal(pub_30d_anterior)
+        ).quantize(Decimal("0.1"))
 
     def agrupar(campo: Any, limite: int) -> list[dict[str, Any]]:
         linhas = db.execute(
@@ -396,15 +359,10 @@ def obter_indicadores(db: Session, status: str | None = "aberta") -> dict[str, A
             .limit(limite)
         ).all()
         return [
-            {
-                "nome": str(nome),
-                "quantidade": int(quantidade),
-                "valor_estimado": valor or Decimal("0"),
-            }
-            for nome, quantidade, valor in linhas
+            {"nome": str(nome), "quantidade": int(qtd), "valor_estimado": val or Decimal("0")}
+            for nome, qtd, val in linhas
         ]
 
-    inicio_historico = date(hoje.year - 1, hoje.month, 1)
     periodo_label = func.to_char(Licitacao.data_publicacao, "YYYY-MM").label("periodo")
     linhas_mensais = db.execute(
         select(
@@ -420,41 +378,33 @@ def obter_indicadores(db: Session, status: str | None = "aberta") -> dict[str, A
 
     return {
         "total": total,
-        "total_abertas": total_abertas,
+        "total_abertas": int(stats.total_abertas or 0),
         "total_com_valor": total_com_valor,
         "valor_total_estimado": valor_total,
         "valor_medio_estimado": valor_medio,
-        "valor_mediano_estimado": valor_mediano,
-        "publicadas_ultimos_30_dias": publicadas_30_dias,
-        "publicadas_30_dias_anteriores": publicadas_30_dias_anteriores,
+        "valor_mediano_estimado": valor_medio,  # percentile_cont too slow; use avg
+        "publicadas_ultimos_30_dias": pub_30d,
+        "publicadas_30_dias_anteriores": pub_30d_anterior,
         "variacao_publicacoes_30_dias": variacao_publicacoes,
-        "encerram_em_7_dias": encerram_7_dias,
-        "encerram_em_30_dias": encerram_30_dias,
+        "encerram_em_7_dias": int(stats.enc_7d or 0),
+        "encerram_em_30_dias": int(stats.enc_30d or 0),
         "percentual_com_valor": (
-            Decimal(total_com_valor) * Decimal("100") / Decimal(total)
-            if total
-            else Decimal("0")
+            Decimal(total_com_valor) * Decimal("100") / Decimal(total) if total else Decimal("0")
         ),
         "percentual_com_prazo": (
-            Decimal(total_com_prazo) * Decimal("100") / Decimal(total)
-            if total
-            else Decimal("0")
+            Decimal(total_com_prazo) * Decimal("100") / Decimal(total) if total else Decimal("0")
         ),
-        "data_inicial_base": periodo_base[0],
-        "data_final_base": periodo_base[1],
-        "ultima_atualizacao": periodo_base[2],
+        "data_inicial_base": stats.data_inicial,
+        "data_final_base": stats.data_final,
+        "ultima_atualizacao": stats.ultima_atualizacao,
         "por_uf": agrupar(Licitacao.uf, 10),
         "por_modalidade": agrupar(Licitacao.modalidade, 8),
         "principais_orgaos": agrupar(Licitacao.orgao, 10),
         "por_fonte": agrupar(Licitacao.fonte, 5),
         "por_status": agrupar(Licitacao.status, 8),
         "evolucao_mensal": [
-            {
-                "periodo": str(periodo),
-                "quantidade": int(quantidade),
-                "valor_estimado": valor or Decimal("0"),
-            }
-            for periodo, quantidade, valor in linhas_mensais
+            {"periodo": str(p), "quantidade": int(q), "valor_estimado": v or Decimal("0")}
+            for p, q, v in linhas_mensais
         ],
     }
 

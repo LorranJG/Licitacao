@@ -115,7 +115,7 @@ export async function getIndicadores(
       {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         next: { revalidate: 300 },
-        signal: AbortSignal.timeout(12000),
+        signal: AbortSignal.timeout(30000),
       },
     );
     if (!response.ok) {
