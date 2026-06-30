@@ -3,7 +3,7 @@ from decimal import Decimal
 import re
 from typing import Any
 
-from sqlalchemy import Select, func, or_, select, update
+from sqlalchemy import Select, func, or_, select, text, update
 from sqlalchemy.orm import Session
 
 from app.models import Licitacao
@@ -33,12 +33,13 @@ def _aplicar_filtros(
 ) -> Select:
     if palavra_chave:
         termo = palavra_chave.strip()
-        ts_query = func.plainto_tsquery("portuguese", termo)
-        ts_vector = func.to_tsvector(
-            "portuguese",
-            func.concat_ws(" ", Licitacao.titulo, Licitacao.objeto, Licitacao.orgao),
+        query = query.where(
+            text(
+                "to_tsvector('portuguese'::regconfig, "
+                "coalesce(titulo, '') || ' ' || coalesce(objeto, '') || ' ' || coalesce(orgao, '')) "
+                "@@ plainto_tsquery('portuguese'::regconfig, :termo)"
+            ).bindparams(termo=termo)
         )
-        query = query.where(ts_vector.op("@@")(ts_query))
     if uf:
         query = query.where(Licitacao.uf == uf.upper())
     if municipio:
