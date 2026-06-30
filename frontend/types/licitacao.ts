@@ -16,7 +16,7 @@ export type Licitacao = {
   data_encerramento: string | null;
   data_atualizacao: string | null;
   link_original: string | null;
-  dados_originais: Record<string, unknown>;
+  dados_originais?: Record<string, unknown>;
   criado_em: string;
   atualizado_em: string;
 };
@@ -79,6 +79,8 @@ export type Indicadores = {
 export type LicitacaoFilters = {
   palavra_chave: string;
   uf: string;
+  municipio: string;
+  orgao: string;
   modalidade: string;
   status: string;
   data_inicio: string;

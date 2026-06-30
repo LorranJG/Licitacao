@@ -33,6 +33,8 @@ export default async function LicitacoesPage({
   const filters = {
     palavra_chave: first(rawParams.palavra_chave),
     uf: first(rawParams.uf),
+    municipio: first(rawParams.municipio),
+    orgao: first(rawParams.orgao),
     modalidade: first(rawParams.modalidade),
     status:
       rawParams.status === undefined ? "aberta" : first(rawParams.status),

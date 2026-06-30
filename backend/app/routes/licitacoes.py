@@ -14,6 +14,7 @@ from app.schemas import (
     ColetaPNCPResponse,
     IndicadoresResponse,
     LicitacaoDetalheResponse,
+    LicitacaoListResponse,
     LicitacaoResponse,
 )
 from app.services.licitacao_service import (
@@ -35,7 +36,7 @@ router = APIRouter(prefix="/licitacoes", tags=["Licitações"])
 DatabaseSession = Annotated[Session, Depends(get_db)]
 
 
-@router.get("", response_model=list[LicitacaoResponse])
+@router.get("", response_model=list[LicitacaoListResponse])
 def listar(
     response: Response,
     db: DatabaseSession,
@@ -43,6 +44,7 @@ def listar(
     palavra_chave: str | None = None,
     uf: str | None = Query(default=None, min_length=2, max_length=2),
     municipio: str | None = None,
+    orgao: str | None = None,
     modalidade: str | None = None,
     status_licitacao: str | None = Query(default=None, alias="status"),
     data_inicio: date | None = None,
@@ -54,7 +56,7 @@ def listar(
     valor_maximo: Decimal | None = Query(default=None, ge=0),
     limite: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
-) -> list[LicitacaoResponse]:
+) -> list[LicitacaoListResponse]:
     if (
         valor_minimo is not None
         and valor_maximo is not None
@@ -83,6 +85,7 @@ def listar(
         "palavra_chave": palavra_chave,
         "uf": uf,
         "municipio": municipio,
+        "orgao": orgao,
         "modalidade": modalidade,
         "status": status_licitacao,
         "data_inicio": data_inicio,

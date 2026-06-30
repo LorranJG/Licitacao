@@ -27,6 +27,7 @@ FILTROS_PERMITIDOS = {
     "palavra_chave",
     "uf",
     "municipio",
+    "orgao",
     "modalidade",
     "status",
     "fonte",

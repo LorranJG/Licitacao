@@ -51,8 +51,8 @@ export async function getLicitacoes(
       `${apiBaseUrl()}/licitacoes?${params.toString()}`,
       {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        cache: "no-store",
-        signal: AbortSignal.timeout(8000),
+        next: { revalidate: 30 },
+        signal: AbortSignal.timeout(12000),
       },
     );
     if (!response.ok) {
@@ -139,7 +139,7 @@ export async function getIndicadores(
 export async function getStatusDados(): Promise<StatusDados | null> {
   try {
     const response = await fetch(`${apiBaseUrl()}/status-dados`, {
-      cache: "no-store",
+      next: { revalidate: 60 },
       signal: AbortSignal.timeout(8000),
     });
     return response.ok ? ((await response.json()) as StatusDados) : null;

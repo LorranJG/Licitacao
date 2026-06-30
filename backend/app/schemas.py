@@ -33,6 +33,32 @@ class LicitacaoResponse(LicitacaoBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class LicitacaoListResponse(BaseModel):
+    """Resposta enxuta para listagens — omite dados_originais para reduzir payload."""
+
+    id: int
+    fonte: str
+    fonte_id: str
+    titulo: str
+    objeto: str | None = None
+    orgao: str | None = None
+    cnpj_orgao: str | None = None
+    modalidade: str | None = None
+    status: str | None = None
+    uf: str | None = None
+    municipio: str | None = None
+    valor_estimado: Decimal | None = None
+    data_publicacao: date | None = None
+    data_abertura: date | None = None
+    data_encerramento: date | None = None
+    data_atualizacao: datetime | None = None
+    link_original: str | None = None
+    criado_em: datetime
+    atualizado_em: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class DocumentoResponse(BaseModel):
     titulo: str
     url: str

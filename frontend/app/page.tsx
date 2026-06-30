@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { getStatusDados } from "@/lib/api";
+
 const features = [
   {
     title: "Busca centralizada",
@@ -34,7 +36,9 @@ const features = [
   },
 ] as const;
 
-export default function Home() {
+export default async function Home() {
+  const statusDados = await getStatusDados();
+  const totalLicitacoes = statusDados?.total_licitacoes ?? null;
   return (
     <main>
       <section className="container-page pb-20 pt-16 sm:pt-24 lg:pb-28 lg:pt-32">
@@ -70,15 +74,17 @@ export default function Home() {
             </div>
             <dl className="mt-12 grid max-w-xl grid-cols-3 gap-5 border-t border-slate-200 pt-7">
               <div>
-                <dt className="text-sm text-slate-500">Fontes integradas</dt>
+                <dt className="text-sm text-slate-500">Licitações indexadas</dt>
                 <dd className="mt-1 font-mono text-lg font-semibold text-navy-950">
-                  2 fontes
+                  {totalLicitacoes !== null
+                    ? totalLicitacoes.toLocaleString("pt-BR")
+                    : "—"}
                 </dd>
               </div>
               <div>
-                <dt className="text-sm text-slate-500">Atualização</dt>
+                <dt className="text-sm text-slate-500">Fontes integradas</dt>
                 <dd className="mt-1 font-mono text-lg font-semibold text-navy-950">
-                  Sob demanda
+                  2 fontes
                 </dd>
               </div>
               <div>

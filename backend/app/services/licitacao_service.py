@@ -19,6 +19,7 @@ def _aplicar_filtros(
     palavra_chave: str | None = None,
     uf: str | None = None,
     municipio: str | None = None,
+    orgao: str | None = None,
     modalidade: str | None = None,
     status: str | None = None,
     data_inicio: date | None = None,
@@ -31,22 +32,23 @@ def _aplicar_filtros(
     criado_apos: datetime | None = None,
 ) -> Select:
     if palavra_chave:
-        termo = f"%{palavra_chave.strip()}%"
-        query = query.where(
-            or_(
-                Licitacao.titulo.ilike(termo),
-                Licitacao.objeto.ilike(termo),
-                Licitacao.orgao.ilike(termo),
-            )
+        termo = palavra_chave.strip()
+        ts_query = func.plainto_tsquery("portuguese", termo)
+        ts_vector = func.to_tsvector(
+            "portuguese",
+            func.concat_ws(" ", Licitacao.titulo, Licitacao.objeto, Licitacao.orgao),
         )
+        query = query.where(ts_vector.op("@@")(ts_query))
     if uf:
         query = query.where(Licitacao.uf == uf.upper())
     if municipio:
         query = query.where(Licitacao.municipio.ilike(f"%{municipio.strip()}%"))
+    if orgao:
+        query = query.where(Licitacao.orgao.ilike(f"%{orgao.strip()}%"))
     if modalidade:
         query = query.where(Licitacao.modalidade.ilike(f"%{modalidade.strip()}%"))
     if status:
-        query = query.where(Licitacao.status.ilike(status.strip()))
+        query = query.where(Licitacao.status == status.strip().lower())
     if data_inicio:
         query = query.where(Licitacao.data_publicacao >= data_inicio)
     if data_fim:
@@ -82,6 +84,7 @@ def listar_licitacoes(
     palavra_chave: str | None = None,
     uf: str | None = None,
     municipio: str | None = None,
+    orgao: str | None = None,
     modalidade: str | None = None,
     status: str | None = None,
     data_inicio: date | None = None,
@@ -100,6 +103,7 @@ def listar_licitacoes(
         palavra_chave=palavra_chave,
         uf=uf,
         municipio=municipio,
+        orgao=orgao,
         modalidade=modalidade,
         status=status,
         data_inicio=data_inicio,
@@ -130,6 +134,7 @@ def contar_licitacoes(
     palavra_chave: str | None = None,
     uf: str | None = None,
     municipio: str | None = None,
+    orgao: str | None = None,
     modalidade: str | None = None,
     status: str | None = None,
     data_inicio: date | None = None,
@@ -146,6 +151,7 @@ def contar_licitacoes(
         palavra_chave=palavra_chave,
         uf=uf,
         municipio=municipio,
+        orgao=orgao,
         modalidade=modalidade,
         status=status,
         data_inicio=data_inicio,

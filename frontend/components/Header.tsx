@@ -1,4 +1,4 @@
-import { Bell, BellRing, Heart, Radar, UserRound } from "lucide-react";
+import { Bell, BellRing, Heart, LayoutDashboard, Radar, UserRound } from "lucide-react";
 import Link from "next/link";
 
 import { LogoutButton } from "@/components/AccountActions";
@@ -42,6 +42,13 @@ export async function Header() {
           </Link>
           {usuario?.acesso_liberado ? (
             <>
+              <Link
+                href="/dashboard"
+                className="focus-ring hidden items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-navy-900 sm:inline-flex"
+              >
+                <LayoutDashboard aria-hidden="true" size={17} />
+                Dashboard
+              </Link>
               <Link
                 href="/favoritos"
                 className="focus-ring hidden items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-navy-900 md:inline-flex"

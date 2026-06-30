@@ -5,6 +5,8 @@ type LicitacaoFiltersProps = {
   values: {
     palavra_chave: string;
     uf: string;
+    municipio: string;
+    orgao: string;
     modalidade: string;
     status: string;
     data_inicio: string;
@@ -18,33 +20,9 @@ type LicitacaoFiltersProps = {
 };
 
 const ufs = [
-  "AC",
-  "AL",
-  "AP",
-  "AM",
-  "BA",
-  "CE",
-  "DF",
-  "ES",
-  "GO",
-  "MA",
-  "MT",
-  "MS",
-  "MG",
-  "PA",
-  "PB",
-  "PR",
-  "PE",
-  "PI",
-  "RJ",
-  "RN",
-  "RS",
-  "RO",
-  "RR",
-  "SC",
-  "SP",
-  "SE",
-  "TO",
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
+  "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN",
+  "RS", "RO", "RR", "SC", "SP", "SE", "TO",
 ] as const;
 
 export function LicitacaoFilters({ values }: LicitacaoFiltersProps) {
@@ -92,6 +70,15 @@ export function LicitacaoFilters({ values }: LicitacaoFiltersProps) {
           />
         </label>
         <label className="space-y-1.5">
+          <span className="block text-sm font-bold text-navy-950">Órgão</span>
+          <input
+            name="orgao"
+            defaultValue={values.orgao}
+            placeholder="Ex.: Ministério da Saúde..."
+            className={fieldClass}
+          />
+        </label>
+        <label className="space-y-1.5">
           <span className="block text-sm font-bold text-navy-950">UF</span>
           <select name="uf" defaultValue={values.uf} className={fieldClass}>
             <option value="">Todas as UFs</option>
@@ -101,6 +88,17 @@ export function LicitacaoFilters({ values }: LicitacaoFiltersProps) {
               </option>
             ))}
           </select>
+        </label>
+        <label className="space-y-1.5">
+          <span className="block text-sm font-bold text-navy-950">
+            Município
+          </span>
+          <input
+            name="municipio"
+            defaultValue={values.municipio}
+            placeholder="Ex.: São Paulo, Campinas..."
+            className={fieldClass}
+          />
         </label>
         <label className="space-y-1.5">
           <span className="block text-sm font-bold text-navy-950">
@@ -143,7 +141,7 @@ export function LicitacaoFilters({ values }: LicitacaoFiltersProps) {
         </label>
         <label className="space-y-1.5">
           <span className="block text-sm font-bold text-navy-950">
-            Divulgacao de
+            Divulgação de
           </span>
           <input
             type="date"
@@ -154,7 +152,7 @@ export function LicitacaoFilters({ values }: LicitacaoFiltersProps) {
         </label>
         <label className="space-y-1.5">
           <span className="block text-sm font-bold text-navy-950">
-            Divulgacao ate
+            Divulgação até
           </span>
           <input
             type="date"
@@ -176,7 +174,7 @@ export function LicitacaoFilters({ values }: LicitacaoFiltersProps) {
         </label>
         <label className="space-y-1.5">
           <span className="block text-sm font-bold text-navy-950">
-            Encerramento ate
+            Encerramento até
           </span>
           <input
             type="date"
