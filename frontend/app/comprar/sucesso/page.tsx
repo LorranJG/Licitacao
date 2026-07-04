@@ -22,7 +22,7 @@ export default async function CompraSucessoPage() {
         <p className="mt-3 leading-7 text-slate-600">
           {usuario?.acesso_liberado
             ? "Sua compra foi confirmada e o Radar ja esta disponivel."
-            : "Estamos aguardando a confirmacao do pagamento pelo Stripe. Isso costuma acontecer em instantes."}
+            : "Estamos aguardando a confirmação do Mercado Pago. Pagamentos por cartão são instantâneos. Boleto pode levar até 3 dias úteis."}
         </p>
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
           <Link

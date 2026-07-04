@@ -25,15 +25,15 @@ export default async function ComprarPage({ searchParams }: ComprarPageProps) {
               Acesso ao Radar
             </p>
             <h1 className="mt-3 max-w-3xl text-4xl font-bold tracking-tight text-navy-950 sm:text-5xl">
-              Compre o acesso para consultar e monitorar licitacoes.
+              Monitore licitações públicas em um só lugar.
             </h1>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-600">
               Sua conta pode ser criada gratuitamente. O acesso ao produto fica
-              liberado somente depois da confirmacao do pagamento.
+              liberado somente depois da confirmação do pagamento.
             </p>
             {cancelado ? (
               <p className="mt-5 max-w-xl rounded-xl bg-amber-50 p-4 text-sm font-semibold text-amber-800">
-                A compra foi cancelada. Voce pode iniciar novamente quando quiser.
+                A compra foi cancelada. Você pode iniciar novamente quando quiser.
               </p>
             ) : null}
           </div>
@@ -45,18 +45,26 @@ export default async function ComprarPage({ searchParams }: ComprarPageProps) {
               </span>
               <div>
                 <h2 className="text-xl font-bold text-navy-950">
-                  Radar Licitacoes
+                  Radar Licitações
                 </h2>
                 <p className="text-sm text-slate-500">Acesso completo</p>
               </div>
             </div>
 
-            <ul className="mt-6 space-y-3 text-sm leading-6 text-slate-700">
+            <div className="mt-6 rounded-xl bg-navy-50 px-4 py-3">
+              <p className="text-sm text-slate-500">Valor mensal</p>
+              <p className="mt-0.5 text-3xl font-extrabold text-navy-950">
+                R$ 49<span className="text-xl">,90</span>
+                <span className="ml-1 text-base font-semibold text-slate-400">/mês</span>
+              </p>
+            </div>
+
+            <ul className="mt-5 space-y-3 text-sm leading-6 text-slate-700">
               {[
-                "Consulta completa da base de licitacoes",
+                "Consulta completa da base de licitações",
                 "Filtros, indicadores e detalhes das oportunidades",
-                "Favoritos, lembretes e buscas salvas",
-                "Acesso ao portal oficial de cada publicacao",
+                "Favoritos, lembretes e buscas salvas com alertas",
+                "Acesso ao portal oficial de cada publicação",
               ].map((item) => (
                 <li key={item} className="flex gap-2">
                   <CheckCircle2 className="mt-0.5 shrink-0 text-emerald-600" size={17} />
@@ -85,6 +93,14 @@ export default async function ComprarPage({ searchParams }: ComprarPageProps) {
                 </div>
               )}
             </div>
+
+            <p className="mt-4 text-center text-xs text-slate-400">
+              Pagamento processado pelo{" "}
+              <span className="font-semibold text-slate-500">Mercado Pago</span>.{" "}
+              <Link href="/reembolso" className="underline hover:text-navy-700">
+                Política de reembolso
+              </Link>
+            </p>
           </aside>
         </div>
       </section>
@@ -93,18 +109,18 @@ export default async function ComprarPage({ searchParams }: ComprarPageProps) {
         {[
           {
             icon: LockKeyhole,
-            title: "Acesso apos pagamento",
-            text: "Cadastro e login continuam disponiveis, mas o produto so abre quando o Stripe confirmar a compra.",
+            title: "Acesso após pagamento",
+            text: "Cadastro e login continuam disponíveis, mas o produto só abre quando o Mercado Pago confirmar a compra.",
           },
           {
             icon: ShieldCheck,
-            title: "Confirmacao segura",
-            text: "A liberacao acontece pelo webhook do Stripe, nao apenas pelo retorno do navegador.",
+            title: "Confirmação segura",
+            text: "A liberação acontece pelo webhook do Mercado Pago, não apenas pelo retorno do navegador.",
           },
           {
             icon: Search,
             title: "Uso completo",
-            text: "Depois de liberado, voce acessa licitacoes, indicadores, favoritos, lembretes e buscas.",
+            text: "Depois de liberado, você acessa licitações, indicadores, favoritos, lembretes e buscas salvas.",
           },
         ].map(({ icon: Icon, title, text }) => (
           <article key={title} className="rounded-2xl border border-slate-200 bg-white p-6">

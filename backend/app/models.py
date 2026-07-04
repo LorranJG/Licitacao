@@ -140,12 +140,11 @@ class Usuario(Base):
     plano_status: Mapped[str] = mapped_column(
         String(30), default="pendente", server_default="pendente"
     )
-    stripe_customer_id: Mapped[str | None] = mapped_column(
-        String(255), unique=True, index=True
+    is_admin: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
     )
-    stripe_checkout_session_id: Mapped[str | None] = mapped_column(
-        String(255), unique=True, index=True
-    )
+    mp_preference_id: Mapped[str | None] = mapped_column(String(255))
+    mp_payment_id: Mapped[str | None] = mapped_column(String(255), unique=True, index=True)
     telegram_chat_id: Mapped[int | None] = mapped_column(
         BigInteger, unique=True, index=True
     )

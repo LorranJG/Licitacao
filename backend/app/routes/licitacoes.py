@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import CurrentUser, CurrentUserWithAccess
+from app.dependencies.auth import CurrentAdmin, CurrentUser, CurrentUserWithAccess
 from app.schemas import (
     ColetaComprasGovRequest,
     ColetaComprasGovResponse,
@@ -114,7 +114,7 @@ def listar(
 async def coletar_pncp(
     payload: ColetaPNCPRequest,
     db: DatabaseSession,
-    _usuario: CurrentUser,
+    _usuario: CurrentAdmin,
 ) -> ColetaPNCPResponse:
     try:
         service = PNCPService()
@@ -145,7 +145,7 @@ async def coletar_pncp(
 async def coletar_compras_gov(
     payload: ColetaComprasGovRequest,
     db: DatabaseSession,
-    _usuario: CurrentUser,
+    _usuario: CurrentAdmin,
 ) -> ColetaComprasGovResponse:
     try:
         service = ComprasGovService()

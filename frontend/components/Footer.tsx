@@ -12,6 +12,9 @@ export function Footer() {
           <Link href="/termos" className="hover:text-navy-800">
             Termos de uso
           </Link>
+          <Link href="/reembolso" className="hover:text-navy-800">
+            Reembolso
+          </Link>
         </nav>
       </div>
     </footer>

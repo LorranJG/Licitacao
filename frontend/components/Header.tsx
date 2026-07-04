@@ -2,6 +2,7 @@ import { Bell, BellRing, Heart, LayoutDashboard, Radar, UserRound } from "lucide
 import Link from "next/link";
 
 import { LogoutButton } from "@/components/AccountActions";
+import { MobileMenu } from "@/components/MobileMenu";
 import { getCurrentUser } from "@/lib/session";
 
 export async function Header() {
@@ -10,7 +11,7 @@ export async function Header() {
     <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
       <div className="container-page flex h-[72px] items-center justify-between py-4">
         <Link
-          href="/"
+          href={usuario ? "/licitacoes" : "/"}
           className="focus-ring flex items-center gap-3 rounded-lg"
           aria-label="Radar Licitações — página inicial"
         >
@@ -85,11 +86,15 @@ export async function Header() {
           ) : (
             <Link
               href="/login"
-              className="focus-ring rounded-lg px-3 py-2 text-sm font-bold text-navy-800 hover:bg-navy-50"
+              className="focus-ring hidden rounded-lg px-3 py-2 text-sm font-bold text-navy-800 hover:bg-navy-50 xl:block"
             >
               Área do cliente
             </Link>
           )}
+          <MobileMenu
+            logado={!!usuario}
+            acessoLiberado={!!usuario?.acesso_liberado}
+          />
         </nav>
       </div>
     </header>
