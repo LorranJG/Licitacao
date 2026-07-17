@@ -1,16 +1,28 @@
 from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 import re
+import threading
+import time as _time
 from typing import Any
 
 from sqlalchemy import Select, func, or_, select, text, update
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.models import Licitacao
 from app.services.comprasgov_normalizador import normalizar_comprasgov
 from app.services.normalizador import normalizar_pncp
 from app.services.normalizador import extrair_chave_comprasgov_link
 from app.utils.datas import hoje_local
+
+# Cache TTL em memória para o COUNT de paginação (X-Total-Count). O COUNT
+# exato varre todas as linhas que casam com o filtro (~32k para "aberta") e é
+# o gargalo de CPU do Postgres nas listagens. O total muda devagar, então um
+# TTL curto por combinação de filtros elimina esse custo da maioria dos
+# requests sem afetar a percepção do usuário. Cada processo worker tem o seu.
+_count_cache: dict[tuple, tuple[int, float]] = {}
+_count_cache_lock = threading.Lock()
+_COUNT_CACHE_MAX = 1000
 
 
 def _aplicar_filtros(
@@ -128,7 +140,7 @@ def listar_licitacoes(
     return list(db.scalars(query).all())
 
 
-def contar_licitacoes(
+def _contar_licitacoes_db(
     db: Session,
     *,
     palavra_chave: str | None = None,
@@ -164,6 +176,28 @@ def contar_licitacoes(
         criado_apos=criado_apos,
     )
     return int(db.scalar(query) or 0)
+
+
+def contar_licitacoes(db: Session, **filtros: Any) -> int:
+    """Conta com cache TTL por combinação de filtros (ver _count_cache)."""
+    ttl = get_settings().licitacoes_count_cache_ttl_seconds
+    if ttl <= 0:
+        return _contar_licitacoes_db(db, **filtros)
+
+    chave = tuple(sorted(filtros.items()))
+    agora = _time.monotonic()
+    with _count_cache_lock:
+        cacheado = _count_cache.get(chave)
+        if cacheado is not None and cacheado[1] > agora:
+            return cacheado[0]
+
+    total = _contar_licitacoes_db(db, **filtros)
+
+    with _count_cache_lock:
+        if len(_count_cache) >= _COUNT_CACHE_MAX:
+            _count_cache.clear()
+        _count_cache[chave] = (total, agora + ttl)
+    return total
 
 
 def buscar_licitacao(db: Session, licitacao_id: int) -> Licitacao | None:

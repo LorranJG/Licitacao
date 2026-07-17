@@ -49,6 +49,12 @@ class Settings(BaseSettings):
     compras_gov_backfill_start_delay_seconds: int = 300
     compras_gov_request_delay_seconds: float = 0.5
     compras_gov_uasg_enrichment_limit: int = 50
+    sentry_dsn: str | None = None
+    licitacoes_count_cache_ttl_seconds: int = 60
+    db_pool_size: int = 10
+    db_max_overflow: int = 20
+    db_pool_timeout: int = 10
+    db_statement_timeout_ms: int = 0
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
 
     model_config = SettingsConfigDict(

@@ -2,6 +2,7 @@ services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
+    shm_size: 512mb
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-radar_licitacoes}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -23,6 +24,7 @@ services:
     environment:
       ENVIRONMENT: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-radar_licitacoes}
+      DB_STATEMENT_TIMEOUT_MS: "15000"
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
     depends_on:
