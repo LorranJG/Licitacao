@@ -82,4 +82,7 @@ async def executar_worker() -> None:
 
 
 if __name__ == "__main__":
+    from app.observabilidade import init_sentry
+
+    init_sentry("telegram-reminder-worker")
     asyncio.run(executar_worker())

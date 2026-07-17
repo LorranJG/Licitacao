@@ -2,9 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
+from app.observabilidade import init_sentry
 from app.routes import auth, conta, health, licitacoes, mvp, pagamentos, telegram
 
 settings = get_settings()
+init_sentry("backend")
 
 app = FastAPI(
     title=settings.app_name,

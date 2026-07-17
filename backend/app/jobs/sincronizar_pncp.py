@@ -260,7 +260,10 @@ async def executar_open_worker() -> None:
 
 
 if __name__ == "__main__":
+    from app.observabilidade import init_sentry
+
     modo = sys.argv[1] if len(sys.argv) > 1 else "live"
+    init_sentry(f"pncp-worker-{modo}")
     if modo == "backfill":
         asyncio.run(executar_backfill_worker())
     elif modo == "open":

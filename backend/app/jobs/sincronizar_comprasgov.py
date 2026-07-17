@@ -151,5 +151,8 @@ async def worker_backfill() -> None:
 
 
 if __name__ == "__main__":
+    from app.observabilidade import init_sentry
+
     modo = sys.argv[1] if len(sys.argv) > 1 else "live"
+    init_sentry(f"comprasgov-worker-{modo}")
     asyncio.run(worker_backfill() if modo == "backfill" else worker_live())

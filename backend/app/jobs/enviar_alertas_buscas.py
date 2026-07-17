@@ -149,4 +149,7 @@ async def worker() -> None:
 
 
 if __name__ == "__main__":
+    from app.observabilidade import init_sentry
+
+    init_sentry("saved-search-alert-worker")
     asyncio.run(worker())
