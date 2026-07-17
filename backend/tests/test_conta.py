@@ -72,15 +72,7 @@ def test_fluxo_de_conta_favorito_e_validacao_de_lembrete(monkeypatch) -> None:
         assert bloqueado.status_code == 402
 
         with Session(engine) as db:
-            _liberar_acesso(
-                db,
-                {
-                    "id": "cs_test_conta",
-                    "customer": "cus_test_conta",
-                    "payment_status": "paid",
-                    "metadata": {"usuario_id": str(me["id"])},
-                },
-            )
+            _liberar_acesso(db, str(me["id"]), "mp_test_conta")
         assert client.get("/auth/me", headers=headers).json()["acesso_liberado"] is True
 
         favorito = client.post(f"/favoritos/{licitacao_id}", headers=headers)
@@ -163,7 +155,6 @@ def test_fluxo_de_conta_favorito_e_validacao_de_lembrete(monkeypatch) -> None:
             json={
                 "nome": "Software em SP",
                 "filtros": {
-                    "palavra_chave": "Licitação",
                     "uf": "SP",
                     "status": "aberta",
                 },
